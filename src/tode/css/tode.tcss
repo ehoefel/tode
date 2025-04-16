@@ -1,0 +1,110 @@
+
+Tode {
+  width: 100%;
+  height: 100%;
+
+  Panel {
+    background: transparent;
+
+    & > * {
+      border-left: tall $primary;
+      dock: right;
+      height: 100%;
+    }
+
+    BorderEditor {
+      layout: vertical;
+      width: auto;
+
+      & > .title {
+
+        text-align: right;
+        text-style: bold;
+        padding-right: 1;
+        background: $primary;
+      }
+
+      Preview {
+        padding: 1;
+        grid-size: 3;
+        grid-columns: 1 1fr 1;
+        grid-rows: 1 1fr 1;
+        height: 40%;
+        background: $background-lighten-1;
+        width: 100%;
+        color: white 50%;
+
+        PropSelector:hover {
+          color: white 75%;
+        }
+
+        PropSelector.-highlighted {
+          color: white;
+        }
+        Placeholder {
+          hatch: cross $success 40%;
+        }
+      }
+
+      Rule {
+        margin: 0;
+        width: 100%;
+      }
+
+      PropEditor {
+        padding: 1;
+        background: $background-lighten-1;
+        margin: 0;
+        height: 1fr;
+        width: 100%;
+
+        &.-none {
+          align: center middle;
+          hatch: cross $error 40%;
+          & > * {
+            width: auto;
+          }
+        }
+
+        & > .title {
+          text-style: bold;
+          padding-left: 1;
+          background: $background-lighten-2;
+        }
+
+        TabbedContent Tab.-active {
+          background: $primary;
+          color: white;
+        }
+        TabPane {
+          text-style: bold;
+background: red;
+
+        }
+
+        Palette {
+          overflow-y: scroll;
+          width: 100%;
+          background: $background-lighten-2;
+          border: round white;
+          grid-rows: 1;
+          grid-columns: 1;
+          grid-size: 3;
+          grid-gutter: 1;
+            & > * {
+              height: 1;
+              width: 1;
+              text-align: left;
+
+              &:hover {
+                  background: $primary;
+              }
+            }
+
+        }
+      }
+    }
+
+  }
+}
+
