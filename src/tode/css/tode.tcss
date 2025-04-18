@@ -13,36 +13,19 @@ Tode {
   }
 
   ImageEditor {
-    align: center middle;
-    width: 1fr;
-    height: 1fr;
-    layers: above below;
-
     &> MenuBar {
-      dock: top;
-      layer: above;
       MenuItem {
-        color: white;
         &:hover {
           background: #292929;
         }
+        &:focus {
+          background: #0b0b0b;
+        }
       }
-
-    }
-
-    &> Canvas {
-      width: auto;
-      height: auto;
-      layer: below;
     }
 
     & > Toolbox {
-      layout: vertical;
-      height: 100%;
-
       &> Grid {
-        padding-top: 3;
-        height: auto;
         Tool {
           &:hover {
             background: #303030;
@@ -52,25 +35,9 @@ Tode {
           }
         }
       }
-
-      ActiveColors {
-        height: auto;
-        width: 100%;
-        color: white;
-        content-align: center middle;
-        align: center middle;
-        Horizontal {
-          height: auto;
-          align: center middle;
-
-          SwapColors:hover {
-            color: #292929;
-          }
-        }
-        Static {
-          width: auto;
-        }
-      }
+    }
+    & > RightDock {
+      background: yellow 20%;
     }
   }
 
@@ -174,3 +141,16 @@ Tode {
   }
 }
 
+Workspace {
+  layout: vertical;
+  border-right: wide #565855;
+
+  Container {
+    align: center middle;
+
+    Ruler.-top {
+      outline-top: tall white;
+      height: 1;
+    }
+  }
+}

@@ -4,7 +4,7 @@ from textual.geometry import Size
 from textual.message import Message
 from textual.reactive import reactive
 from textual.widget import Widget
-from textual.widgets import Placeholder, Static
+from textual.widgets import Static
 
 
 class ColorSwapped(Message):
@@ -16,6 +16,27 @@ class ColorReset(Message):
 
 
 class ActiveColors(Widget):
+
+    DEFAULT_CSS = """
+      ActiveColors {
+        height: auto;
+        width: 100%;
+        color: white;
+        content-align: center middle;
+        align: center middle;
+        Horizontal {
+          height: auto;
+          align: center middle;
+
+          SwapColors:hover {
+            color: #292929;
+          }
+        }
+        Static {
+          width: auto;
+        }
+      }
+    """
 
     fg = reactive(None, recompose=True)
     bg = reactive(None, recompose=True)
@@ -36,12 +57,12 @@ class ActiveColors(Widget):
     class ResetColors(Static):
         DEFAULT_CSS = """
         ResetColors {
-          color: white;
+          color: black;
         }
         """
 
         def render(self):
-            return "◩"
+            return "󰀽"  # 󰀿
 
         def on_click(self, event):
             self.post_message(ColorReset())
@@ -77,8 +98,8 @@ class ActiveColors(Widget):
         )
         yield Horizontal(
             ActiveColors.ActiveColorsPixel("█", fg=self.fg),
-            ActiveColors.ActiveColorsPixel("🬕", fg=self.fg, bg=self.bg),
-            ActiveColors.ActiveColorsPixel("🬂", fg=self.fg, bg=self.bg),
+            ActiveColors.ActiveColorsPixel("█", fg=self.fg),
+            ActiveColors.ActiveColorsPixel("█", fg=self.fg),
             ActiveColors.ActiveColorsPixel("🬹", fg=self.bg),
             ActiveColors.ActiveColorsPixel("🬓", fg=self.bg),
         )
@@ -89,7 +110,7 @@ class ActiveColors(Widget):
 
 """
  🬭🬭🬭 🗘
- █🬕🬂🬹🬓
+ ███🬹🬓
  ◩🬉🬎🬎🬄
 """
 
@@ -175,33 +196,37 @@ class Zoom(Tool):
 class Toolbox(Widget):
 
     DEFAULT_CSS = """
-    Toolbox {
-      layer: above;
-      dock: left;
-      height: 1fr;
-      width: auto;
-      & > Grid {
-        width: 100%;
-        height: auto;
-        grid-size: 5;
-        grid-gutter: 0;
-        grid-columns: auto;
-        & > Tool {
-          margin: 0;
-          color: #bebebe;
+      Toolbox {
+        dock: left;
+        layout: vertical;
+        width: auto;
+        height: 100%;
+        background: #434343;
+        padding-top: 3;
+        & > Grid {
+          width: 100%;
           height: auto;
-          width: auto;
-          padding: 0 1;
+          grid-size: 5;
+          grid-gutter: 0;
+          grid-columns: auto;
+          & > Tool {
+            margin: 0;
+            color: #bebebe;
+            height: auto;
+            width: auto;
+            padding: 0 1;
+          }
         }
       }
-    }
-
     """
+
+    initial_fg = Color.parse("black")
+    initial_bg = Color.parse("white")
 
     def __init__(self):
         super().__init__()
-        self.fg = Color.parse("white")
-        self.bg = Color.parse("black")
+        self.fg = self.initial_fg
+        self.bg = self.initial_bg
 
     def compose(self):
         yield Grid(
@@ -239,8 +264,8 @@ class Toolbox(Widget):
         active_colors.bg = self.bg
 
     def on_color_reset(self):
-        self.fg = Color.parse("white")
-        self.bg = Color.parse("black")
+        self.fg = self.initial_fg
+        self.bg = self.initial_bg
         active_colors = self.get_child_by_type(ActiveColors)
         active_colors.fg = self.fg
         active_colors.bg = self.bg

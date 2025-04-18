@@ -12,6 +12,13 @@ from apps.image_editor.pixel import Pixel
 
 class Canvas(Widget):
 
+    DEFAULT_CSS = """
+      Canvas {
+        width: auto;
+        height: auto;
+      }
+    """
+
     canvas_size: Size
     data: list
 
