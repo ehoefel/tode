@@ -10,7 +10,7 @@ from textual.css._error_tools import friendly_list
 from textual.geometry import Size
 from textual.widget import Widget
 
-from border_style import BorderStyle
+from window_manager.border_style import BorderStyle
 
 BorderPosition = Literal["top", "left", "right", "bottom"]
 """The valid positions of the border widget."""
@@ -145,7 +145,7 @@ class Border(Widget, can_focus=False):
             return container.width
         return 1
 
-    def get_content_height(self, container: Size, viewport: Size, width: int) -> int:
+    def get_content_height(self, container: Size, viewport: Size, width: int):
         if self.position in ["left", "right"]:
             return 1
         return container.height

@@ -7,8 +7,8 @@ from textual.reactive import reactive
 from textual.message import Message
 
 
-from border import VerticalBorderRenderable
-from border_style import BorderStyle, BorderStyleAttributes
+from window_manager.border import VerticalBorderRenderable
+from window_manager.border_style import BorderStyle
 
 PALETTE = """
 ▉▕█▘▙▚▝▞▟
@@ -62,7 +62,6 @@ class PropSelector(Widget):
         self.border_style = style
 
     def render(self):
-        print("rendering", self, self.border_style)
         value = getattr(self.border_style, self.prop_name)
         if self.content_size.width > 1:
             return value * self.content_size.width

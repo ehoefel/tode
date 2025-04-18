@@ -2,6 +2,77 @@
 Tode {
   width: 100%;
   height: 100%;
+  WindowButton {
+    &:hover {
+      background: #0078d7;
+    }
+  }
+
+  CloseButton:hover {
+    background: #e81123;
+  }
+
+  ImageEditor {
+    align: center middle;
+    width: 1fr;
+    height: 1fr;
+    layers: above below;
+
+    &> MenuBar {
+      dock: top;
+      layer: above;
+      MenuItem {
+        color: white;
+        &:hover {
+          background: #292929;
+        }
+      }
+
+    }
+
+    &> Canvas {
+      width: auto;
+      height: auto;
+      layer: below;
+    }
+
+    & > Toolbox {
+      layout: vertical;
+      height: 100%;
+
+      &> Grid {
+        padding-top: 3;
+        height: auto;
+        Tool {
+          &:hover {
+            background: #303030;
+          }
+          &:focus {
+            background: #1e1e1e;
+          }
+        }
+      }
+
+      ActiveColors {
+        height: auto;
+        width: 100%;
+        color: white;
+        content-align: center middle;
+        align: center middle;
+        Horizontal {
+          height: auto;
+          align: center middle;
+
+          SwapColors:hover {
+            color: #292929;
+          }
+        }
+        Static {
+          width: auto;
+        }
+      }
+    }
+  }
 
   Panel {
     background: transparent;
@@ -75,11 +146,6 @@ Tode {
         TabbedContent Tab.-active {
           background: $primary;
           color: white;
-        }
-        TabPane {
-          text-style: bold;
-background: red;
-
         }
 
         Palette {
