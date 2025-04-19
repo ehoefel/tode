@@ -13,6 +13,7 @@ from apps.image_editor import ImageEditor
 
 class Tode(App):
     CSS_PATH = "css/tode.tcss"
+    AUTO_FOCUS = None
 
     def create_window(self, content: Widget):
         window = Window(content)

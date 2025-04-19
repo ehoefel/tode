@@ -14,10 +14,12 @@ class Pixel():
     def __init__(
         self,
         pos: Offset,
-        value: str | None = None
+        value: str | None = None,
+        style: Style | None = None
     ) -> None:
         self.pos = pos
         self.value = value
+        self.style = style
 
     def is_empty(self):
         return self.value is None
@@ -28,4 +30,4 @@ class Pixel():
             bit = self.pos.y % 2
             text = [Pixel.EMPTY_PIXEL_EVEN, Pixel.EMPTY_PIXEL_ODD][bit]
             return Segment(text, Pixel.EMPTY_STYLE)
-        return Segment(self.value)
+        return Segment(self.value, style=self.style)

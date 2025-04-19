@@ -4,11 +4,13 @@
 # from textual.message import Message
 
 from textual.geometry import Size
+from textual.color import Color
 
-from .canvas import Canvas
 from .toolbox import Toolbox
 from .right_dock import RightDock
 from .workspace import Workspace
+from .tools.color_picker import ColorPicker
+from .tools.active_colors import ActiveColors
 
 from window_manager.menu_bar import MenuBar, MenuItem
 from window_manager.size_state import SizeState
@@ -41,11 +43,37 @@ class ImageEditor(App):
 
     title = "Image Editor"
     preferred_state = SizeState.maximized
+    memory = dict()
+    tools = dict()
+    AUTO_FOCUS = None
+
+    def __init__(self):
+        super().__init__()
+        self.memory['active_brush'] = "fg"
+        self.memory['fg'] = Color.parse("black")
+        self.memory['bg'] = Color.parse("white")
+        self.tools['active_colors'] = ActiveColors(
+            fg=self.memory['fg'],
+            bg=self.memory['bg']
+        )
+
+    def on_color_picked(self, event):
+        event.stop()
+        active_colors = self.tools['active_colors']
+        if self.memory['active_brush'] == "fg":
+            active_colors.fg = event.color
+        if self.memory['active_brush'] == "bg":
+            active_colors.bg = event.color
 
     def compose(self):
-        yield Toolbox()
+        yield Toolbox(self.tools)
         yield Workspace()
-        yield RightDock()
+        yield RightDock(
+            color_picker=ColorPicker(
+                target=self.memory['active_brush'],
+                value=self.memory[self.memory['active_brush']]
+                )
+            )
         yield MenuBar(
             MenuItem("File"),
             MenuItem("Edit"),

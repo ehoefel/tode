@@ -154,3 +154,28 @@ Workspace {
     }
   }
 }
+
+RightDock {
+  ColorPicker {
+    height: auto;
+    ColorHexCode {
+      layout: horizontal;
+      height: auto;
+      padding-right: 1;
+      padding-left: 1;
+      margin-left: 0;
+      Static {
+        width: auto;
+      }
+      Input {
+        height: 1;
+        width: auto;
+        border: none;
+        text-align: left;
+        padding: 0;
+        width: 9;
+      }
+
+    }
+  }
+}

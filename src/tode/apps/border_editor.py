@@ -1,5 +1,3 @@
-from typing import get_args
-
 from textual.widget import Widget
 from textual.widgets import Static, Placeholder, Rule, TabbedContent
 from textual.containers import Grid

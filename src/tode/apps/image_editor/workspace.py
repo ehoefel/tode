@@ -62,7 +62,5 @@ class Workspace(Widget):
 
     def on_tab_focus(self, event):
         event.stop()
-        print("got new tab focus", event)
-        print(self.active_tab_idx, " -> ", event.tab_idx)
         self.active_tab_idx = event.tab_idx
 
