@@ -15,6 +15,7 @@ class App(Widget):
 
     title: str = "App"
     preferred_state: SizeState = SizeState.restored
+    AUTO_FOCUS = None
 
     def restored_size(self, new_size: Size):
         window_proportion = Size(0.5, 0.5)

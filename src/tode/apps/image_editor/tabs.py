@@ -52,6 +52,7 @@ class TabBarBottomBorder(Widget):
 
     gap_start: int = reactive(0)
     gap_length: int = reactive(0)
+    active_tab_idx: int = reactive(0)
 
     def __init__(self, tabs, active_tab_idx):
         super().__init__()
@@ -59,8 +60,13 @@ class TabBarBottomBorder(Widget):
         self.active_tab_idx = active_tab_idx
         self.calculate_gap_size()
 
+    def watch_active_tab_idx(self, old_value, new_value) -> None:
+        print(self, old_value, new_value)
+        print(self.tabs)
+        self.calculate_gap_size()
+
     def calculate_gap_size(self):
-        if self.active_tab_idx is None:
+        if self.active_tab_idx is None or len(self.tabs) == 0:
             self.gap_start = 0
             self.gap_length = 0
         else:
@@ -90,15 +96,22 @@ class TabBar(Widget):
       }
     """
 
+    active_tab_idx: int = reactive(0)
+
     def __init__(self, *tabs: Iterable[Tab], active_tab_idx: int) -> None:
         super().__init__()
         self.tabs = tabs
         self.active_tab_idx = active_tab_idx
+
+    def watch_active_tab_idx(self, old_value, new_value) -> None:
         for idx, tab in enumerate(self.tabs):
-            if idx == active_tab_idx:
+            if idx == new_value:
                 tab.add_class("-active")
             else:
                 tab.remove_class("-active")
+        if not self.is_mounted:
+            return
+        self.get_child_by_type(TabBarBottomBorder).active_tab_idx = new_value
 
     def compose(self):
         for tab in self.tabs:

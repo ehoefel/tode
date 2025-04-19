@@ -11,6 +11,7 @@ from .right_dock import RightDock
 from .workspace import Workspace
 from .tools.color_picker import ColorPicker
 from .tools.active_colors import ActiveColors
+from .tools.brush_selector import BrushSelector
 
 from window_manager.menu_bar import MenuBar, MenuItem
 from window_manager.size_state import SizeState
@@ -56,6 +57,7 @@ class ImageEditor(App):
             fg=self.memory['fg'],
             bg=self.memory['bg']
         )
+        self.tools['brush_selector'] = BrushSelector()
 
     def on_color_picked(self, event):
         event.stop()
@@ -72,7 +74,8 @@ class ImageEditor(App):
             color_picker=ColorPicker(
                 target=self.memory['active_brush'],
                 value=self.memory[self.memory['active_brush']]
-                )
+            ),
+            brush_selector=self.tools['brush_selector']
             )
         yield MenuBar(
             MenuItem("File"),

@@ -101,6 +101,8 @@ class HueBar(Widget):
         self.h_frac = 1 / (self.size.width - 1)
 
     def calculate_cursor(self):
+        if self.cursor is not None:
+            return
         r, g, b = self.value.rgb
         self.cursor, _, _ = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
 
@@ -170,6 +172,8 @@ class ColorPickArea(Widget):
         self.handle_color_pick(event)
 
     def get_color(self) -> Color:
+        if self.cursor is None:
+            return Color.parse("black")
         x, y = self.cursor
         h = self.h if self.h is not None else 0
         s = (x) * self.s_frac
