@@ -61,8 +61,6 @@ class TabBarBottomBorder(Widget):
         self.calculate_gap_size()
 
     def watch_active_tab_idx(self, old_value, new_value) -> None:
-        print(self, old_value, new_value)
-        print(self.tabs)
         self.calculate_gap_size()
 
     def calculate_gap_size(self):

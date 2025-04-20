@@ -178,4 +178,27 @@ RightDock {
 
     }
   }
+
+  BrushSelector {
+    layout: grid;
+    height: 12;
+    grid-size: 1;
+    grid-columns: 1fr;
+    grid-rows: 1 1fr 2;
+    grid-gutter: 0;
+
+    BrushOptions {
+      width: auto;
+      overflow: hidden auto;
+      height: auto;
+    }
+
+    SelectedBrush {
+     margin-top: 1;
+     width: 100%;
+     height: 2;
+     text-overflow: ellipsis;
+     text-wrap: wrap;
+    }
+  }
 }

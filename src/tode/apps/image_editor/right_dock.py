@@ -41,7 +41,6 @@ class Dialog1(Widget):
         self.active_tab_idx = 0
 
     def watch_active_tab_idx(self, old_value, new_value) -> None:
-        print(self, old_value, new_value)
         for idx, tab in enumerate(self.tabs):
             if idx == new_value:
                 tab.content.styles.display = "block"
