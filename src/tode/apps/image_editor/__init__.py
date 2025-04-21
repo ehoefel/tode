@@ -1,12 +1,10 @@
 # cSpell:disable
 
-# from textual.reactive import reactive
-# from textual.message import Message
-
-from textual.geometry import Size
 from textual.color import Color
+from textual.geometry import Size
 
 from .toolbox import Toolbox
+from .tools import Pencil
 from .right_dock import RightDock
 from .workspace import Workspace
 from .tools.color_picker import ColorPicker
@@ -46,37 +44,55 @@ class ImageEditor(App):
     preferred_state = SizeState.maximized
     memory = dict()
     tools = dict()
+    active_tool = None
     AUTO_FOCUS = None
 
     def __init__(self):
         super().__init__()
-        self.memory['active_brush'] = "fg"
+        self.memory['active_color'] = "fg"
+        self.memory['brush'] = " "
         self.memory['fg'] = Color.parse("black")
         self.memory['bg'] = Color.parse("white")
-        self.tools['active_colors'] = ActiveColors(
+        self.tools[ActiveColors] = ActiveColors(
             fg=self.memory['fg'],
             bg=self.memory['bg']
         )
-        self.tools['brush_selector'] = BrushSelector()
+        self.tools[BrushSelector] = BrushSelector(value=self.memory['brush'])
+        self.tools[Pencil] = Pencil()
+        self.toolbox = Toolbox(self.tools, active_tool=self.active_tool)
+        self.workspace = Workspace()
+        self.right_dock = RightDock(
+            color_picker=ColorPicker(
+                target=self.memory['active_color'],
+                value=self.memory[self.memory['active_color']]
+            ),
+            brush_selector=self.tools[BrushSelector]
+        )
+
+    def on_tool_selected(self, event) -> None:
+        event.stop()
+        self.active_tool = event.tool
+        self.active_tool.add_class("-active")
+        self.toolbox.active_tool = event.tool
+
+    def on_brush_selected(self, event):
+        event.stop()
+        self.memory['brush'] = event.brush
+        self.tools[Pencil].brush = event.brush
+        self.toolbox.refresh(recompose=True)
 
     def on_color_picked(self, event):
         event.stop()
-        active_colors = self.tools['active_colors']
+        active_colors = self.tools[ActiveColors]
         if self.memory['active_brush'] == "fg":
             active_colors.fg = event.color
         if self.memory['active_brush'] == "bg":
             active_colors.bg = event.color
 
     def compose(self):
-        yield Toolbox(self.tools)
-        yield Workspace()
-        yield RightDock(
-            color_picker=ColorPicker(
-                target=self.memory['active_brush'],
-                value=self.memory[self.memory['active_brush']]
-            ),
-            brush_selector=self.tools['brush_selector']
-            )
+        yield self.toolbox
+        yield self.workspace
+        yield self.right_dock
         yield MenuBar(
             MenuItem("File"),
             MenuItem("Edit"),

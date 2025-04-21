@@ -1,84 +1,12 @@
-from textual.containers import Grid
+from textual.containers import Grid, Vertical
 from textual.geometry import Size
+from textual.reactive import reactive
 from textual.widget import Widget
 
-
-class Tool(Widget):
-
-    symbol: str
-
-    def render(self):
-        return self.symbol
-
-    def get_content_width(self, container, viewport) -> int:
-        return 1
-
-    def get_content_height(self, container: Size, viewport: Size, width: int):
-        return 1
-
-
-class MoveTool(Tool):
-    symbol = ""
-
-
-class RectangleSelect(Tool):
-    symbol = "󰒆"
-
-
-class FreeSelect(Tool):
-    symbol = "󱇺"
-
-
-class FuzzySelect(Tool):
-    symbol = "󰁨"
-
-
-class Crop(Tool):
-    symbol = "󰆞"
-
-
-class Rotate(Tool):
-    symbol = "󰑨"
-
-
-class WarpTransform(Tool):
-    symbol = "󱪁"
-
-
-class BucketFill(Tool):
-    symbol = ""
-
-
-class Pencil(Tool):
-    symbol = ""
-
-
-class Eraser(Tool):
-    symbol = "󰇾"
-
-
-class Clone(Tool):
-    symbol = "󰴹"
-
-
-class Smudge(Tool):
-    symbol = "󰆽"
-
-
-class Paths(Tool):
-    symbol = ""
-
-
-class Text(Tool):
-    symbol = "󰚞"
-
-
-class ColorPicker(Tool):
-    symbol = "󰈋"
-
-
-class Zoom(Tool):
-    symbol = "󰍉"
+from .tools.active_colors import ActiveColors
+from .tools.tool import Empty
+from .tools import tool_list
+from .tabs import Tab, TabBar
 
 
 class Toolbox(Widget):
@@ -108,30 +36,61 @@ class Toolbox(Widget):
       }
     """
 
-    def __init__(self, tools: dict):
+    active_tool = reactive(None, recompose=True)
+    active_tab_idx: int = reactive(None)
+
+    def __init__(self, tools: dict, active_tool: Widget | None):
         super().__init__()
+        tool_options_content = Empty()
+        if active_tool is not None:
+            tool_options_content = active_tool.tool_options
+        self.tabs = [
+            Tab(name="", content=tool_options_content),
+            Tab(name="", content=Widget()),
+            Tab(name="", content=Widget()),
+            Tab(name="", content=Widget())
+        ]
+        self.tab_bar = TabBar(*self.tabs, active_tab_idx=self.active_tab_idx)
         self.tools = tools
+        self.active_tool = active_tool
+        self.active_tab_idx = 0
+
+    def watch_active_tool(self, old_value, new_value) -> None:
+        if new_value is None:
+            content = Empty()
+        else:
+            content = new_value.tool_options
+        self.tabs[0].content = content
+
+    def watch_active_tab_idx(self, old_value, new_value) -> None:
+        for idx, tab in enumerate(self.tabs):
+            if idx == new_value:
+                tab.content.styles.display = "block"
+            else:
+                tab.content.styles.display = "none"
+        print("active_tab", new_value)
+        if hasattr(self, "tab_bar"):
+            self.tab_bar.active_tab_idx = new_value
 
     def compose(self):
-        yield Grid(
-            MoveTool(),
-            RectangleSelect(),
-            FreeSelect(),
-            FuzzySelect(),
-            Crop(),
-            Rotate(),
-            WarpTransform(),
-            BucketFill(),
-            Pencil(),
-            Eraser(),
-            Clone(),
-            Smudge(),
-            Paths(),
-            Text(),
-            ColorPicker(),
-            Zoom()
-        )
-        yield self.tools['active_colors']
+        print("compose")
+        map = tool_list
+        with Grid():
+            tool_classes = self.tools.keys()
+            for tool in map:
+                if tool in tool_classes:
+                    yield self.tools[tool]
+                else:
+                    yield tool(disabled=True)
+        yield self.tools[ActiveColors]
+        with Vertical():
+            yield self.tab_bar
+            for tab in self.tabs:
+                yield tab.content
+
+    def on_tab_focus(self, event):
+        event.stop()
+        self.active_tab_idx = event.tab_idx
 
     def get_content_width(self, container, viewport) -> int:
         return 15

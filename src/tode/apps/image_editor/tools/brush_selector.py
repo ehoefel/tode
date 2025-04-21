@@ -15,21 +15,6 @@ from textual.widgets import Static, Input
 from utils.unicode import Unicode
 
 
-class SelectedBrush(Static):
-
-    brush = reactive('')
-
-    def __init__(self, brush: str) -> None:
-        super().__init__()
-        self.brush = brush
-
-    def render(self):
-        text_left = "󰬀󰫲󰫹󰫲󰫰󰬁󰫲󰫱:"
-        text_right = self.brush if self.brush is not None else ""
-        padding = self.size.width - len(text_left) - len(text_right)
-        return (" " * padding).join([text_left, text_right])
-
-
 class BrushSelected(Message):
 
     def __init__(self, brush: str | None) -> None:
@@ -79,11 +64,12 @@ class BrushOptions(ScrollView):
     selected_brush = reactive(None)
     brush_options = reactive(None)
 
-    def __init__(self, brush_options) -> None:
+    def __init__(self, brush_options: list, selected_brush) -> None:
         super().__init__()
         self.filter = filter
         self.brush_options = brush_options
         self.brush_area = []
+        self.selected_brush = selected_brush
 
         self.virtual_size = Size(width=20, height=20)
 
@@ -129,6 +115,18 @@ class BrushOptions(ScrollView):
 
     def watch_virtual_size(self, old_value, new_value) -> None:
         self.build_brush_area()
+        if new_value is None or len(self.brush_area) == 0:
+            return
+        if type(self.selected_brush) == str:
+            text = self.selected_brush
+        elif type(self.selected_brush) == SelectedBrushOption:
+            text = self.selected_brush.value
+        for y in range(new_value.height):
+            for x in range(new_value.width):
+                if text == self.brush_area[y][x]:
+                    brush = SelectedBrushOption(x=x, y=y, value=text)
+                    self.selected_brush = brush
+                    return
 
     def watch_brush_options(self, old_value, new_value) -> None:
         self.build_brush_area()
@@ -244,14 +242,13 @@ class BrushSelector(Widget):
         self.brush_unicodes = brush_unicodes
 
         self.input = Input(placeholder=" filter", select_on_focus=False)
-        self.brush_options = BrushOptions(brush_options=self.brush_unicodes)
-        self.selected_brush = SelectedBrush(value)
+        self.brush_options = BrushOptions(brush_options=self.brush_unicodes,
+                                          selected_brush=self.value)
 
     def watch_brush_unicodes(self, old_value, new_value) -> None:
         self.build_filtered_brush_unicodes()
 
     def build_filtered_brush_unicodes(self):
-
         def filter(char):
             if char.lower() == self.filter_text.lower():
                 return True
@@ -273,11 +270,6 @@ class BrushSelector(Widget):
     def on_brush_selected(self, event):
         self.value = event.brush
 
-    def watch_value(self, old_value, new_value):
-        if hasattr(self, "selected_brush"):
-            self.selected_brush.brush = new_value
-
     def compose(self):
         yield self.input
         yield self.brush_options
-        yield self.selected_brush

@@ -30,10 +30,16 @@ Tode {
           &:hover {
             background: #303030;
           }
-          &:focus {
+          &.-active {
             background: #1e1e1e;
           }
+          &:disabled {
+            color: #323232;
+          }
         }
+      }
+      &> Vertical {
+        width: 100%;
       }
     }
     & > RightDock {
@@ -199,6 +205,29 @@ RightDock {
      height: 2;
      text-overflow: ellipsis;
      text-wrap: wrap;
+    }
+  }
+}
+
+ToolOptions {
+  height: 100%;
+  color: white;
+  layout: vertical;
+  BrushLine {
+    height: 1;
+    padding: 0 1;
+  }
+  PaintBackgroundOption {
+    layout: grid;
+    grid-size: 2;
+    grid-columns: 1fr 1;
+    height: 1;
+    padding: 0 1;
+    Static {
+      width: auto;
+    }
+    Checkbox:hover {
+      background: #0078d7;
     }
   }
 }
