@@ -231,3 +231,10 @@ ToolOptions {
     }
   }
 }
+
+Canvas {
+  Horizontal {
+    width: auto;
+    height: auto;
+  }
+}

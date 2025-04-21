@@ -58,7 +58,7 @@ class ImageEditor(App):
             bg=self.memory['bg']
         )
         self.tools[BrushSelector] = BrushSelector(value=self.memory['brush'])
-        self.tools[Pencil] = Pencil()
+        self.tools[Pencil] = Pencil(self.tools[ActiveColors])
         self.toolbox = Toolbox(self.tools, active_tool=self.active_tool)
         self.workspace = Workspace()
         self.right_dock = RightDock(
@@ -84,9 +84,9 @@ class ImageEditor(App):
     def on_color_picked(self, event):
         event.stop()
         active_colors = self.tools[ActiveColors]
-        if self.memory['active_brush'] == "fg":
+        if self.memory['active_color'] == "fg":
             active_colors.fg = event.color
-        if self.memory['active_brush'] == "bg":
+        if self.memory['active_color'] == "bg":
             active_colors.bg = event.color
 
     def compose(self):
@@ -109,3 +109,7 @@ class ImageEditor(App):
         canvas_size = Size(50, 20)
         canvas_name = "Untitled.xcf"
         self.get_child_by_type(Workspace).new_tab(canvas_name, canvas_size)
+
+    def on_canvas_click(self, message) -> None:
+        if self.active_tool is not None:
+            self.active_tool.apply_to_canvas(message.canvas, message.pixel)

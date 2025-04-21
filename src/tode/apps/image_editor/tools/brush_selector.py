@@ -5,12 +5,12 @@ from typing import NamedTuple
 from rich.segment import Segment
 
 from textual.message import Message
-from textual.geometry import Size, Offset, Region
+from textual.geometry import Size, Offset
 from textual.reactive import reactive, var
 from textual.scroll_view import ScrollView
 from textual.strip import Strip
 from textual.widget import Widget
-from textual.widgets import Static, Input
+from textual.widgets import Input
 
 from utils.unicode import Unicode
 
@@ -20,13 +20,6 @@ class BrushSelected(Message):
     def __init__(self, brush: str | None) -> None:
         super().__init__()
         self.brush = brush
-
-
-class SelectedBrushOption(NamedTuple):
-
-    x: int
-    y: int
-    value: str
 
 
 class BrushOptions(ScrollView):
@@ -70,7 +63,6 @@ class BrushOptions(ScrollView):
         self.brush_options = brush_options
         self.brush_area = []
         self.selected_brush = selected_brush
-
         self.virtual_size = Size(width=20, height=20)
 
     def get_content_width(self, container, viewport) -> int:
@@ -81,6 +73,8 @@ class BrushOptions(ScrollView):
 
     def on_resize(self) -> None:
         width = self.size.width - 1  # - 1 for the scrollbar
+        if self.brush_options is None:
+            return
         height = math.ceil(len(self.brush_options) / width)
         self.virtual_size = Size(width=width, height=height)
 
@@ -110,25 +104,14 @@ class BrushOptions(ScrollView):
         if x >= len(self.brush_area[y]):
             return
         char = self.brush_area[y][x]
-        self.selected_brush = SelectedBrushOption(x=x, y=y, value=char)
+        self.selected_brush = char
         self.post_message(BrushSelected(char))
 
-    def watch_virtual_size(self, old_value, new_value) -> None:
-        self.build_brush_area()
-        if new_value is None or len(self.brush_area) == 0:
-            return
-        if type(self.selected_brush) == str:
-            text = self.selected_brush
-        elif type(self.selected_brush) == SelectedBrushOption:
-            text = self.selected_brush.value
-        for y in range(new_value.height):
-            for x in range(new_value.width):
-                if text == self.brush_area[y][x]:
-                    brush = SelectedBrushOption(x=x, y=y, value=text)
-                    self.selected_brush = brush
-                    return
-
     def watch_brush_options(self, old_value, new_value) -> None:
+        self.build_brush_area()
+        self.on_resize()
+
+    def watch_virtual_size(self, old_value, new_value) -> None:
         self.build_brush_area()
 
     def build_brush_area(self):
@@ -150,6 +133,8 @@ class BrushOptions(ScrollView):
             return Strip([])
         scroll_x, scroll_y = self.scroll_offset  # The current scroll position
         content_y = y + scroll_y
+        if content_y > len(self.brush_area):
+            return Strip([])
         line_chars = "".join(self.brush_area[content_y])
 
         style = self.get_component_rich_style()
@@ -161,14 +146,14 @@ class BrushOptions(ScrollView):
         )
         render_selected = (
             self.selected_brush is not None
-            and content_y == self.selected_brush.y
+            and self.selected_brush in line_chars
         )
         render_either = render_cursor or render_selected
         render_both = render_cursor and render_selected
         render_one = (
-                (render_both and self.cursor.x == self.selected_brush.x)
-                or (not render_both and render_either)
-                )
+            (render_both and line_chars[self.cursor.x] == self.selected_brush)
+            or (not render_both and render_either)
+        )
 
         if render_selected:
             style_selected = self.get_component_rich_style("-option-selected")
@@ -178,7 +163,7 @@ class BrushOptions(ScrollView):
         if render_one:
             if render_selected:
                 special_style = style_selected
-                x = self.selected_brush.x
+                x = line_chars.index(self.selected_brush)
             else:
                 special_style = style_hover
                 x = self.cursor.x
@@ -186,7 +171,7 @@ class BrushOptions(ScrollView):
             segments.append(Segment(line_chars[x], special_style))
             segments.append(Segment(line_chars[x + 1:], style))
         elif render_both:
-            x1 = self.selected_brush.x
+            x1 = line_chars.index(self.selected_brush)
             x2 = self.cursor.x
             s1 = style_selected
             s2 = style_hover
@@ -234,7 +219,13 @@ class BrushSelector(Widget):
         super().__init__()
         self.value = value
         brush_unicodes = []
-        enabled_blocks = ['Basic Latin', 'Latin-1 Supplement']
+        enabled_blocks = [
+            'Basic Latin',
+            'Latin-1 Supplement',
+            'Box Drawing',
+            'Block Elements',
+            'Symbols for Legacy Computing'
+        ]
 
         for block in enabled_blocks:
             brush_unicodes += Unicode.get_block_chars(block)

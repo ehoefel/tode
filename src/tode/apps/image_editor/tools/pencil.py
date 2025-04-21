@@ -1,6 +1,11 @@
-from textual.reactive import reactive
+from textual.color import Color
+from textual.reactive import var
 from textual.widget import Widget
 from textual.widgets import Static
+
+from apps.image_editor.canvas import Canvas
+from apps.image_editor.pixel import Pixel, PixelProperties
+from utils.checkbox import Checkbox
 
 from .tool import Tool, ToolOptions
 
@@ -28,43 +33,34 @@ class BrushLine(FormLine):
     value = Static(" ")
 
 
-class Checkbox(Widget):
-    #  󰄮 󰡖 󰄲 󰱒  󰄱 󰄵
-    #  󰄱  󰄱 󰄱  󰄱 󰄵
-
-    checked = reactive(False)
-
-    def __init__(self, checked: bool = False):
-        super().__init__()
-        self.checked = checked
-
-    def render(self):
-        return "󰄲 " if self.checked else "󰄱 "
-
-    def on_click(self, event):
-        self.checked = not self.checked
-
-
 class PaintBackgroundOption(FormLine):
 
-    checked = reactive(False)
+    checked = var(False)
     label = "background: "
 
     def __init__(self, checked: bool = False):
         super().__init__()
+        self.value = Checkbox(checked=checked)
         self.checked = checked
-        self.value = Checkbox(checked=self.checked)
+
+    def watch_checked(self, old_value, new_value):
+        self.value.checked = new_value
+
+
+    def on_checkbox_changed(self, message) -> None:
+        self.checked = message.value
+        message.stop()
 
 
 class PencilToolOptions(ToolOptions):
     title = "Pencil"
 
-    brush = reactive(" ")
+    brush = var(" ")
 
     def __init__(self, brush: str | None = " ") -> None:
         super().__init__()
         self.brush_line = BrushLine()
-        self.paint_background_option = PaintBackgroundOption()
+        self.paint_background = PaintBackgroundOption()
         self.brush = brush
 
     def watch_brush(self, old_value, new_value) -> None:
@@ -72,13 +68,21 @@ class PencilToolOptions(ToolOptions):
 
     def compose(self):
         yield self.brush_line
-        yield self.paint_background_option
+        yield self.paint_background
 
 
 class Pencil(Tool):
     symbol = ""
     tool_options = PencilToolOptions()
-    brush = reactive(" ")
+    brush = var(" ")
 
     def watch_brush(self, old_value, new_value) -> None:
         self.tool_options.brush = new_value
+
+    def apply_to_canvas(self, canvas: Canvas, pixel: Pixel) -> None:
+        fg = self.active_colors.fg
+        bg = self.active_colors.bg
+        if self.tool_options.paint_background.checked and bg is not None:
+            pixel.apply(PixelProperties(char=self.brush, fg=fg, bg=bg))
+        else:
+            pixel.apply(PixelProperties(char=self.brush, fg=fg))

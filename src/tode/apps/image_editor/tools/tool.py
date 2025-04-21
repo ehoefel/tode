@@ -2,6 +2,10 @@ from textual.geometry import Size
 from textual.message import Message
 from textual.widget import Widget
 
+from .active_colors import ActiveColors
+from apps.image_editor.canvas import Canvas
+from apps.image_editor.pixel import Pixel
+
 
 class ToolOptions(Widget):
     title: str
@@ -32,6 +36,19 @@ class Tool(Widget):
 
     symbol: str
     tool_options: Widget = Empty()
+    active_colors: ActiveColors
+
+    def __init__(
+        self,
+        active_colors: ActiveColors | None = None,
+        *,
+        name: str | None = None,
+        id: str | None = None,
+        classes: str | None = None,
+        disabled: bool = False
+    ) -> None:
+        super().__init__(name=name, id=id, classes=classes, disabled=disabled)
+        self.active_colors = active_colors
 
     def render(self):
         return self.symbol
@@ -44,3 +61,6 @@ class Tool(Widget):
 
     def on_click(self, event):
         self.post_message(ToolSelected(self))
+
+    def apply_to_canvas(self, canvas: Canvas, pixel: Pixel) -> None:
+        pass

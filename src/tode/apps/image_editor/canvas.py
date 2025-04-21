@@ -1,13 +1,17 @@
-from typing import Iterable
-
-from rich.console import Console, ConsoleOptions
-from rich.segment import Segment
-
+from textual.containers import Horizontal
+from textual.message import Message
 from textual.geometry import Size, Offset
-from textual.strip import Strip
 from textual.widget import Widget
 
-from apps.image_editor.pixel import Pixel
+from .pixel import Pixel
+
+
+class CanvasClick(Message):
+
+    def __init__(self, canvas, pixel: Pixel) -> None:
+        super().__init__()
+        self.canvas = canvas
+        self.pixel = pixel
 
 
 class Canvas(Widget):
@@ -37,22 +41,43 @@ class Canvas(Widget):
         for i in range(size.height):
             row = []
             for j in range(size.width):
-                row.append(Pixel(Offset(x=j, y=i)))
+                row.append(Pixel(pos=Offset(x=j, y=i)))
             self.data.append(row)
+        self.mouse_captured = False
 
-    def render(self):
-        return self
-
-    def __rich_console__(
-        self, console: Console, options: ConsoleOptions
-    ) -> Iterable[Segment]:
-        data = []
+    def compose(self):
         for row in self.data:
-            data += [pixel.segment for pixel in row] + [Segment.line()]
-        return Strip(data[:-1])
+            yield Horizontal(*row)
 
     def get_content_width(self, container, viewport) -> int:
         return self.canvas_size.width
 
     def get_content_height(self, container: Size, viewport: Size, width: int):
         return self.canvas_size.height
+
+    def on_pixel_click(self, message):
+        print("pixel_click")
+        message.stop()
+        self.post_message(CanvasClick(canvas=self, pixel=message.pixel))
+        self.capture_mouse()
+        self.mouse_captured = True
+
+    def on_mouse_move(self, event):
+        if not self.mouse_captured:
+            return
+        if (
+            event.x < 0
+            or event.y < 0
+            or event.x >= len(self.data)
+            or event.y >= len(self.data[0])
+        ):
+            return
+        print("mouse_move", event.x, event.y)
+        event.stop()
+        pixel = self.data[event.y][event.x]
+        self.post_message(CanvasClick(canvas=self, pixel=pixel))
+
+    def on_mouse_up(self, event):
+        print("mouse_up")
+        self.release_mouse()
+        self.mouse_captured = False
