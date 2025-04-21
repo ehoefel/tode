@@ -1,5 +1,7 @@
 import unicodedata
 
+from .char import Char
+
 BLOCK_START = 0
 BLOCK_END = 1
 BLOCK_NAME = 2
@@ -348,12 +350,14 @@ block_ranges = [
 block_names = [block_range[BLOCK_NAME] for block_range in block_ranges]
 
 
-class Unicode(str):
+class Unicode(Char):
 
-    def name(self):
-        return unicodedata.name(self)
+    block_names = block_names
 
-    def get_block_names(cls) -> list:
+    def __init__(self, char):
+        super().__init__(char, unicodedata.name(char))
+
+    def get_block_names() -> list:
         return block_names
 
     def get_block_chars(block_name: str) -> list:

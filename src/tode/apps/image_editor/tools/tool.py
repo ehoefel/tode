@@ -6,6 +6,8 @@ from .active_colors import ActiveColors
 from apps.image_editor.canvas import Canvas
 from apps.image_editor.pixel import Pixel
 
+from utils.button import Button
+
 
 class ToolOptions(Widget):
     title: str
@@ -32,7 +34,7 @@ class ToolSelected(Message):
         self.tool = tool
 
 
-class Tool(Widget):
+class Tool(Button):
 
     symbol: str
     tool_options: Widget = Empty()
@@ -42,22 +44,12 @@ class Tool(Widget):
         self,
         active_colors: ActiveColors | None = None,
         *,
-        name: str | None = None,
         id: str | None = None,
         classes: str | None = None,
         disabled: bool = False
     ) -> None:
-        super().__init__(name=name, id=id, classes=classes, disabled=disabled)
+        super().__init__(name=self.symbol, id=id, classes=classes, disabled=disabled)
         self.active_colors = active_colors
-
-    def render(self):
-        return self.symbol
-
-    def get_content_width(self, container, viewport) -> int:
-        return 1
-
-    def get_content_height(self, container: Size, viewport: Size, width: int):
-        return 1
 
     def on_click(self, event):
         self.post_message(ToolSelected(self))

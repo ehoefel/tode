@@ -12,7 +12,7 @@ from textual.strip import Strip
 from textual.widget import Widget
 from textual.widgets import Input
 
-from utils.unicode import Unicode
+from utils.chars import Chars
 
 
 class BrushSelected(Message):
@@ -103,7 +103,7 @@ class BrushOptions(ScrollView):
             return
         if x >= len(self.brush_area[y]):
             return
-        char = self.brush_area[y][x]
+        char = str(self.brush_area[y][x])  # casting to str from Char
         self.selected_brush = char
         self.post_message(BrushSelected(char))
 
@@ -135,7 +135,8 @@ class BrushOptions(ScrollView):
         content_y = y + scroll_y
         if content_y > len(self.brush_area):
             return Strip([])
-        line_chars = "".join(self.brush_area[content_y])
+        brush_line = self.brush_area[content_y]
+        line_chars = "".join(str(char) for char in brush_line)
 
         style = self.get_component_rich_style()
         segments = []
@@ -224,11 +225,12 @@ class BrushSelector(Widget):
             'Latin-1 Supplement',
             'Box Drawing',
             'Block Elements',
-            'Symbols for Legacy Computing'
+            'Symbols for Legacy Computing',
+            'NerdFonts'
         ]
 
         for block in enabled_blocks:
-            brush_unicodes += Unicode.get_block_chars(block)
+            brush_unicodes += Chars.get_block_chars(block)
 
         self.brush_unicodes = brush_unicodes
 
@@ -241,9 +243,9 @@ class BrushSelector(Widget):
 
     def build_filtered_brush_unicodes(self):
         def filter(char):
-            if char.lower() == self.filter_text.lower():
+            if str(char).lower() == str(self.filter_text).lower():
                 return True
-            if self.filter_text.lower() in char.name().lower():
+            if self.filter_text.lower() in char.name.lower():
                 return True
             return False
 

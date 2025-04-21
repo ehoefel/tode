@@ -19,18 +19,20 @@ class Toolbox(Widget):
         height: 100%;
         background: #434343;
         padding-top: 3;
+        align: center middle;
         & > Grid {
           width: 100%;
           height: auto;
           grid-size: 5;
           grid-gutter: 0;
+          padding: 0;
           grid-columns: auto;
           & > Tool {
             margin: 0;
             color: #bebebe;
             height: auto;
             width: auto;
-            padding: 0 1;
+            padding-left: 1;
           }
         }
       }
@@ -73,7 +75,8 @@ class Toolbox(Widget):
             self.tab_bar.active_tab_idx = new_value
 
     def compose(self):
-        print("compose")
+        from utils.button import Button
+        from .tools.pencil import Pencil
         map = tool_list
         with Grid():
             tool_classes = self.tools.keys()
@@ -93,7 +96,7 @@ class Toolbox(Widget):
         self.active_tab_idx = event.tab_idx
 
     def get_content_width(self, container, viewport) -> int:
-        return 15
+        return 16
 
     def get_content_height(self, container: Size, viewport: Size, width: int):
         return container.height

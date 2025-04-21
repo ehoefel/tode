@@ -71,8 +71,10 @@ class ImageEditor(App):
 
     def on_tool_selected(self, event) -> None:
         event.stop()
+        if self.active_tool is not None:
+            self.active_tool.pressed = False
         self.active_tool = event.tool
-        self.active_tool.add_class("-active")
+        self.active_tool.pressed = True
         self.toolbox.active_tool = event.tool
 
     def on_brush_selected(self, event):

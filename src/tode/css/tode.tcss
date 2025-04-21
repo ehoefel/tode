@@ -25,17 +25,9 @@ Tode {
     }
 
     & > Toolbox {
-      &> Grid {
-        Tool {
-          &:hover {
-            background: #303030;
-          }
-          &.-active {
-            background: #1e1e1e;
-          }
-          &:disabled {
-            color: #323232;
-          }
+      ActiveColors {
+        SwapColors {
+          width: 1;
         }
       }
       &> Vertical {

@@ -5,6 +5,8 @@ from textual.reactive import reactive
 from textual.widgets import Static
 from textual.widget import Widget
 
+from utils.color import get_contrasting_color
+
 
 class ColorSwapped(Message):
     pass
@@ -18,6 +20,7 @@ class SwapColors(Static):
     DEFAULT_CSS = """
     SwapColors {
       color: #bebebe;
+      width: 1;
     }
     """
 
@@ -59,13 +62,12 @@ class ActiveColors(Widget):
 
     DEFAULT_CSS = """
       ActiveColors {
-        height: auto;
+        margin: 1;
         width: 100%;
-        color: white;
-        content-align: center middle;
-        align: center middle;
+        height: 3;
         Horizontal {
-          height: auto;
+          width: 100%;
+          content-align: center middle;
           align: center middle;
 
           SwapColors:hover {
@@ -87,20 +89,21 @@ class ActiveColors(Widget):
         self.bg = bg
 
     def compose(self):
+        fg_contrast = get_contrasting_color(self.fg)
+        bg_contrast = get_contrasting_color(self.bg)
         yield Horizontal(
-            ActiveColorsPixel(" 🬭🬭🬭 ", fg=self.fg),
+            ActiveColorsPixel("🭽▔▔🭾", fg=fg_contrast, bg=self.fg),
+            ActiveColorsPixel(" "),
             SwapColors()
         )
         yield Horizontal(
-            ActiveColorsPixel("█", fg=self.fg),
-            ActiveColorsPixel("█", fg=self.fg),
-            ActiveColorsPixel("█", fg=self.fg),
-            ActiveColorsPixel("🬹", fg=self.bg),
-            ActiveColorsPixel("🬓", fg=self.bg),
+            ActiveColorsPixel("🭼▁▁🭿", fg=fg_contrast, bg=self.fg),
+            ActiveColorsPixel("▔🭾", fg=bg_contrast, bg=self.bg),
         )
         yield Horizontal(
             ResetColors(),
-            ActiveColorsPixel("🬉🬎🬎🬄", fg=self.bg)
+            ActiveColorsPixel(" "),
+            ActiveColorsPixel("🭼▁▁🭿", fg=bg_contrast, bg=self.bg)
         )
 
     def on_color_swapped(self):
