@@ -1,6 +1,5 @@
 # cSpell:disable
 import math
-from typing import NamedTuple
 
 from rich.segment import Segment
 

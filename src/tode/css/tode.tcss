@@ -35,7 +35,7 @@ Tode {
       }
     }
     & > RightDock {
-      background: yellow 20%;
+# background: yellow 20%;
     }
   }
 

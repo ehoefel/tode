@@ -63,7 +63,6 @@ class ImageEditor(App):
         self.workspace = Workspace()
         self.right_dock = RightDock(
             color_picker=ColorPicker(
-                target=self.memory['active_color'],
                 value=self.memory[self.memory['active_color']]
             ),
             brush_selector=self.tools[BrushSelector]
