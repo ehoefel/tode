@@ -27,9 +27,9 @@ class HSV(NamedTuple):
     def to_color(self):
         h, s, v = self
         r, g, b = colorsys.hsv_to_rgb(h, s, v)
-        r = int(r * 255)
-        g = int(g * 255)
-        b = int(b * 255)
+        r = round(r * 255)
+        g = round(g * 255)
+        b = round(b * 255)
         return Color(r, g, b)
 
     def from_color(color: Color):
@@ -87,6 +87,9 @@ class HueBar(Widget):
         self.h_frac = None
         self.mouse_capturing = False
 
+    def on_click(self, event) -> None:
+        event.stop()
+
     def on_mouse_move(self, event) -> None:
         if self.mouse_capturing:
             self.handle_cursor_move(event)
@@ -112,7 +115,7 @@ class HueBar(Widget):
         self.h_frac = 1 / (self.size.width - 1)
 
     def calculate_cursor(self):
-        return int(self.h / self.h_frac)
+        return round(self.h / self.h_frac)
 
     def on_resize(self):
         self.calculate_h_frac()
@@ -165,6 +168,9 @@ class SVPickArea(Widget):
         self.v_frac = None
         self.mouse_capturing = False
 
+    def on_click(self, event) -> None:
+        event.stop()
+
     def on_mouse_move(self, event) -> None:
         if self.mouse_capturing:
             self.handle_color_pick(event)
@@ -208,13 +214,12 @@ class SVPickArea(Widget):
     def __rich_console__(
         self, console: Console, options: ConsoleOptions
     ) -> Iterable[Segment]:
-
         if self.s_frac is None:
             self.calculate_sv_frac()
 
         segments = []
-        cursor_x = int(self.s / self.s_frac)
-        cursor_y = int((1 - self.v) / self.v_frac)
+        cursor_x = round(self.s / self.s_frac)
+        cursor_y = round((1 - self.v) / self.v_frac)
         cursor_pos = Offset(cursor_x, cursor_y)
         color_under_cursor = self.get_color(cursor_pos)
         color_cursor = get_contrasting_color(color_under_cursor)

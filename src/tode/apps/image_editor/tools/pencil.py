@@ -80,8 +80,8 @@ class Pencil(Tool):
         self.tool_options.brush = new_value
 
     def apply_to_canvas(self, canvas: Canvas, pixel: Pixel) -> None:
-        fg = self.active_colors.fg
-        bg = self.active_colors.bg
+        fg = self.color_area.fg
+        bg = self.color_area.bg
         if self.tool_options.paint_background.checked and bg is not None:
             pixel.apply(PixelProperties(char=self.brush, fg=fg, bg=bg))
         else:

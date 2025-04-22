@@ -3,7 +3,7 @@ from textual.geometry import Size
 from textual.reactive import reactive
 from textual.widget import Widget
 
-from .tools.active_colors import ActiveColors
+from .tools.color_area import ColorArea
 from .tools.tool import Empty
 from .tools import tool_list
 from .tabs import Tab, TabBar
@@ -70,13 +70,10 @@ class Toolbox(Widget):
                 tab.content.styles.display = "block"
             else:
                 tab.content.styles.display = "none"
-        print("active_tab", new_value)
         if hasattr(self, "tab_bar"):
             self.tab_bar.active_tab_idx = new_value
 
     def compose(self):
-        from utils.button import Button
-        from .tools.pencil import Pencil
         map = tool_list
         with Grid():
             tool_classes = self.tools.keys()
@@ -85,7 +82,7 @@ class Toolbox(Widget):
                     yield self.tools[tool]
                 else:
                     yield tool(disabled=True)
-        yield self.tools[ActiveColors]
+        yield self.tools[ColorArea]
         with Vertical():
             yield self.tab_bar
             for tab in self.tabs:

@@ -8,7 +8,7 @@ from .tools import Pencil
 from .right_dock import RightDock
 from .workspace import Workspace
 from .tools.color_picker import ColorPicker
-from .tools.active_colors import ActiveColors
+from .tools.color_area import ColorArea
 from .tools.brush_selector import BrushSelector
 
 from window_manager.menu_bar import MenuBar, MenuItem
@@ -53,12 +53,12 @@ class ImageEditor(App):
         self.memory['brush'] = " "
         self.memory['fg'] = Color.parse("black")
         self.memory['bg'] = Color.parse("white")
-        self.tools[ActiveColors] = ActiveColors(
+        self.tools[ColorArea] = ColorArea(
             fg=self.memory['fg'],
             bg=self.memory['bg']
         )
         self.tools[BrushSelector] = BrushSelector(value=self.memory['brush'])
-        self.tools[Pencil] = Pencil(self.tools[ActiveColors])
+        self.tools[Pencil] = Pencil(self.tools[ColorArea])
         self.toolbox = Toolbox(self.tools, active_tool=self.active_tool)
         self.workspace = Workspace()
         self.right_dock = RightDock(
@@ -84,11 +84,11 @@ class ImageEditor(App):
 
     def on_color_picked(self, event):
         event.stop()
-        active_colors = self.tools[ActiveColors]
+        color_area = self.tools[ColorArea]
         if self.memory['active_color'] == "fg":
-            active_colors.fg = event.color
+            color_area.fg = event.color
         if self.memory['active_color'] == "bg":
-            active_colors.bg = event.color
+            color_area.bg = event.color
 
     def compose(self):
         yield self.toolbox

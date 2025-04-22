@@ -25,11 +25,6 @@ Tode {
     }
 
     & > Toolbox {
-      ActiveColors {
-        SwapColors {
-          width: 1;
-        }
-      }
       &> Vertical {
         width: 100%;
       }
