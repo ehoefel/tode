@@ -35,6 +35,9 @@ class Toolbox(Widget):
             padding-left: 1;
           }
         }
+        & > Vertical {
+          width: 100%;
+        }
       }
     """
 

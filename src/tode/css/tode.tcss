@@ -23,15 +23,6 @@ Tode {
         }
       }
     }
-
-    & > Toolbox {
-      &> Vertical {
-        width: 100%;
-      }
-    }
-    & > RightDock {
-# background: yellow 20%;
-    }
   }
 
   Panel {
@@ -134,20 +125,6 @@ Tode {
   }
 }
 
-Workspace {
-  layout: vertical;
-  border-right: wide #565855;
-
-  Container {
-    align: center middle;
-
-    Ruler.-top {
-      outline-top: tall white;
-      height: 1;
-    }
-  }
-}
-
 RightDock {
   ColorPicker {
     height: auto;
@@ -216,12 +193,5 @@ ToolOptions {
     Checkbox:hover {
       background: #0078d7;
     }
-  }
-}
-
-Canvas {
-  Horizontal {
-    width: auto;
-    height: auto;
   }
 }

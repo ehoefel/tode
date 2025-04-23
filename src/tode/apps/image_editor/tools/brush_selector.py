@@ -35,7 +35,7 @@ class BrushOptions(ScrollView):
      }
 
      .-option-selected {
-       text-style: reverse;
+       background: black 40%;
      }
 
      BrushOptions {

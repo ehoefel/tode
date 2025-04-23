@@ -11,9 +11,7 @@ class Dialog2(Widget):
     DEFAULT_CSS = """
       Dialog2 {
         height: 1fr;
-        background: red 50%;
         outline: round black;
-
       }
 
     """
@@ -67,6 +65,7 @@ class RightDock(Widget):
       height: 100%;
       width: auto;
       padding-top: 1;
+      background: #434343;
     }
     """
 

@@ -4,7 +4,7 @@ from textual.widget import Widget
 from textual.widgets import Static
 
 from apps.image_editor.canvas import Canvas
-from apps.image_editor.pixel import Pixel, PixelProperties
+from apps.image_editor.pixel import Pixel
 from utils.checkbox import Checkbox
 
 from .tool import Tool, ToolOptions
@@ -80,9 +80,9 @@ class Pencil(Tool):
         self.tool_options.brush = new_value
 
     def apply_to_canvas(self, canvas: Canvas, pixel: Pixel) -> None:
+        return
         fg = self.color_area.fg
         bg = self.color_area.bg
-        if self.tool_options.paint_background.checked and bg is not None:
-            pixel.apply(PixelProperties(char=self.brush, fg=fg, bg=bg))
-        else:
-            pixel.apply(PixelProperties(char=self.brush, fg=fg))
+        pixel.char = self.brush
+        pixel.fg = fg
+        pixel.bg = bg

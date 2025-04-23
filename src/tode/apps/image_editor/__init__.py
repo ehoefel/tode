@@ -3,13 +3,14 @@
 from textual.color import Color
 from textual.geometry import Size
 
+from .image import Image
+from .right_dock import RightDock
 from .toolbox import Toolbox
 from .tools import Pencil
-from .right_dock import RightDock
-from .workspace import Workspace
 from .tools.color_picker import ColorPicker
 from .tools.color_area import ColorArea
 from .tools.brush_selector import BrushSelector
+from .workspace import Workspace
 
 from window_manager.menu_bar import MenuBar, MenuItem
 from window_manager.size_state import SizeState
@@ -107,9 +108,10 @@ class ImageEditor(App):
         )
 
     def on_mount(self):
-        canvas_size = Size(50, 20)
-        canvas_name = "Untitled.xcf"
-        self.get_child_by_type(Workspace).new_tab(canvas_name, canvas_size)
+        image_size = Size(50, 20)
+        background = self.memory['bg']
+        image = Image.new(image_size, background)
+        self.workspace.new_tab(image)
 
     def on_canvas_click(self, message) -> None:
         if self.active_tool is not None:
