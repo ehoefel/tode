@@ -113,6 +113,6 @@ class ImageEditor(App):
         image = Image.new(image_size, background)
         self.workspace.new_tab(image)
 
-    def on_canvas_click(self, message) -> None:
+    def on_image_click(self, message) -> None:
         if self.active_tool is not None:
-            self.active_tool.apply_to_canvas(message.canvas, message.pixel)
+            self.active_tool.apply_to_layer(message.layer, message.pos)

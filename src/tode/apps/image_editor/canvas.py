@@ -6,15 +6,23 @@ from textual.geometry import Size, Offset, Region
 from textual.reactive import reactive
 from textual.strip import Strip
 from textual.widget import Widget
+from textual.scroll_view import ScrollView
 
 from .pixel import Pixel
 
 
 class CanvasClick(Message):
 
-    def __init__(self, canvas, pos: Offset) -> None:
+    def __init__(self, pos: Offset) -> None:
         super().__init__()
-        self.canvas = canvas
+        self.pos = pos
+
+
+class RenderUpdate(Message):
+
+    def __init__(self, layer, pos: Offset) -> None:
+        super().__init__()
+        self.layer = layer
         self.pos = pos
 
 
@@ -43,7 +51,7 @@ class Layer:
         ]
         return Layer(name, size, data)
 
-    def get(self, pos: Offset):
+    def get(self, pos: Offset) -> Pixel | None:
         if not self.region.contains_point(pos):
             return None
         pixel = self.data[pos.y][pos.x]
@@ -53,8 +61,21 @@ class Layer:
 
         return pixel
 
+    def set(self, pos: Offset, pixel: Pixel) -> None:
+        data = self.data
+        data_y = data[pos.y]
+        data_y[pos.x] = pixel
+        data[pos.y] = data_y
+        self.data = data
+        self.post_message(RenderUpdate(self, pos))
 
-class Canvas(Widget):
+    def apply(self, pos: Offset, pixel: Pixel) -> None:
+        curr = self.get(pos)
+        new_pixel = curr.blend(pixel)
+        self.set(pos, new_pixel)
+
+
+class Canvas(ScrollView):
 
     DEFAULT_CSS = """
       Canvas {
@@ -62,6 +83,7 @@ class Canvas(Widget):
         height: auto;
         color: #666666;
         background: #9E9E9E;
+        overflow: hidden hidden;
       }
     """
 
@@ -130,35 +152,48 @@ class Canvas(Widget):
 
         return Strip(segments)
 
-    def on_pixel_click(self, message):
-        print("pixel_click")
-        message.stop()
-        self.post_message(CanvasClick(canvas=self, pixel=message.pixel))
-        self.capture_mouse()
-        self.mouse_captured = True
-
     def on_mouse_move(self, event):
-        if not self.mouse_captured:
-            return
-        if (
-            event.x < 0
-            or event.y < 0
-            or event.x >= len(self.data)
-            or event.y >= len(self.data[0])
-        ):
-            return
-        print("mouse_move", event.x, event.y)
-        event.stop()
-        pixel = self.data[event.y][event.x]
-        self.post_message(CanvasClick(canvas=self, pixel=pixel))
+        pass
+        # if not self.mouse_captured:
+        #     return
+        # if (
+        #     event.x < 0
+        #     or event.y < 0
+        #     or event.x >= len(self.data)
+        #     or event.y >= len(self.data[0])
+        # ):
+        #     return
+        # print("mouse_move", event.x, event.y)
+        # event.stop()
+        # pixel = self.data[event.y][event.x]
+        # self.post_message(CanvasClick(pixel=pixel))
+
+    def on_mouse_down(self, event):
+        print("mouse_down", event)
+        pos = Offset(x=event.x, y=event.y)
+        self.post_message(CanvasClick(pos=pos))
 
     def on_mouse_up(self, event):
         print("mouse_up")
-        self.release_mouse()
-        self.mouse_captured = False
+        # self.release_mouse()
+        # self.mouse_captured = False
+
+    def on_render_update(self, message: RenderUpdate) -> None:
+        layer = message.layer
+        pos = message.pos
+        if pos is None:
+            self.refresh()
+        else:
+            self.refresh_line(pos.y)
 
     def get_content_width(self, container, viewport) -> int:
         return self._size.width
 
     def get_content_height(self, container: Size, viewport: Size, width: int):
         return self._size.height
+
+    def watch__layers(self, old_value, new_value) -> None:
+        if new_value is None:
+            return
+        for layer in new_value:
+            layer.post_message = self.post_message

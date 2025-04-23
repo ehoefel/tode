@@ -1,12 +1,13 @@
 from textual.color import Color
+from textual.geometry import Offset
 from textual.reactive import var
 from textual.widget import Widget
 from textual.widgets import Static
 
-from apps.image_editor.canvas import Canvas
-from apps.image_editor.pixel import Pixel
+from apps.image_editor.canvas import Layer
 from utils.checkbox import Checkbox
 
+from ..pixel import Pixel
 from .tool import Tool, ToolOptions
 
 
@@ -46,7 +47,6 @@ class PaintBackgroundOption(FormLine):
     def watch_checked(self, old_value, new_value):
         self.value.checked = new_value
 
-
     def on_checkbox_changed(self, message) -> None:
         self.checked = message.value
         message.stop()
@@ -74,15 +74,17 @@ class PencilToolOptions(ToolOptions):
 class Pencil(Tool):
     symbol = ""
     tool_options = PencilToolOptions()
-    brush = var(" ")
+    brush = var(Pixel.BLANK)
 
     def watch_brush(self, old_value, new_value) -> None:
         self.tool_options.brush = new_value
 
-    def apply_to_canvas(self, canvas: Canvas, pixel: Pixel) -> None:
-        return
+    def apply_to_layer(self, layer: Layer, pos: Offset) -> None:
+        char = self.brush
         fg = self.color_area.fg
         bg = self.color_area.bg
-        pixel.char = self.brush
-        pixel.fg = fg
-        pixel.bg = bg
+        if not self.tool_options.paint_background.value.checked:
+            bg = None
+        pixel = Pixel(char=char, fg=fg, bg=bg)
+        layer.apply(pos, pixel)
+

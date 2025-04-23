@@ -1,10 +1,9 @@
-from textual.geometry import Size
+from textual.geometry import Size, Offset
 from textual.message import Message
 from textual.widget import Widget
 
 from .color_area import ColorArea
-from apps.image_editor.canvas import Canvas
-from apps.image_editor.pixel import Pixel
+from apps.image_editor.canvas import Layer
 
 from utils.button import Button
 
@@ -54,5 +53,5 @@ class Tool(Button):
     def on_click(self, event):
         self.post_message(ToolSelected(self))
 
-    def apply_to_canvas(self, canvas: Canvas, pixel: Pixel) -> None:
+    def apply_to_layer(self, layer: Layer, pos: Offset) -> None:
         pass

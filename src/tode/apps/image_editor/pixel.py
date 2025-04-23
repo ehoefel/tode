@@ -42,3 +42,15 @@ class Pixel:
 
     def is_blank(self):
         return self.char == Pixel.BLANK
+
+    def blend(self, other):
+        if other is None:
+            return self.clone()
+        char = other.char if other.char is not None else self.char
+        fg = other.fg if other.fg is not None else self.fg
+        bg = other.bg if other.bg is not None else self.bg
+        result = Pixel(char, fg=fg, bg=bg)
+        return result
+
+    def __str__(self):
+        return f'Pixel(char=\'{self.char}\', fg={self.fg}, bg={self.bg}, alpha={self.alpha})'
