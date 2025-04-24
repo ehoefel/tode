@@ -1,11 +1,12 @@
-from rich.segment import Segment
+# cSpell: disable
+from __future__ import annotations
+from typing import NamedTuple
 
 from textual.color import Color
 from textual.message import Message
 from textual.geometry import Size, Offset, Region
 from textual.reactive import reactive
 from textual.strip import Strip
-from textual.widget import Widget
 from textual.scroll_view import ScrollView
 
 from .pixel import Pixel
@@ -18,12 +19,146 @@ class CanvasClick(Message):
         self.pos = pos
 
 
-class RenderUpdate(Message):
+class LayerUpdate(Message):
 
-    def __init__(self, layer, pos: Offset) -> None:
+    def __init__(
+        self,
+        layer,
+        offsets: list[Offset] | None = None,
+        lines: list[int] | None = None
+    ) -> None:
         super().__init__()
         self.layer = layer
-        self.pos = pos
+        self._offsets = offsets
+        self._lines = lines
+
+    @property
+    def region(self):
+        if self._offsets is not None:
+            min_x = None
+            min_y = None
+            max_x = None
+            max_y = None
+            for offset in self._offsets:
+                if min_x == None or offset.x < min_x:
+                    min_x = offset.x
+                if max_x == None or offset.x > max_x:
+                    max_x = offset.x
+                if min_y == None or offset.y < min_y:
+                    min_y = offset.y
+                if max_y == None or offset.y > max_y:
+                    max_y = offset.y
+            return Region.from_corners(min_x, min_y, max_x + 1, max_y + 1)
+
+    @property
+    def offsets(self):
+        return self._offsets if self._offsets is not None else []
+
+    @property
+    def lines(self):
+        return self._lines if self._lines is not None else []
+
+
+def pixel_compute(p1: Pixel | None, p2: Pixel | None) -> Pixel | None:
+    if p1 is None:
+        return p2
+    return p1 * p2
+
+
+class LayerView:
+
+    def __init__(
+        self,
+        size: Size,
+        base: LayerView | None,
+        layer: Layer
+    ) -> None:
+        self.size = size
+        self.base = base
+        self.layer = layer
+        self._render_cache = [None] * size.height
+        self._result = [None] * size.height
+        self.dirty_lines = [y for y in self.size.line_range]
+        self.dirty_pixels = []
+
+    def is_dirty(self, y: int):
+        if y in self.dirty_lines:
+            return True
+        for pos in self.dirty_pixels:
+            if pos.y == y:
+                return True
+        return False
+
+    def clear_dirty(self, y: int):
+        if y in self.dirty_lines:
+            self.dirty_lines.remove(y)
+        pixels = [p for p in self.dirty_pixels if p.y == y]
+        for p in pixels:
+            self.dirty_pixels.remove(p)
+
+    def __str__(self):
+        return f'LayerView(layer={self.layer.name})'
+
+    def __repr__(self):
+        return f'LayerView(layer={self.layer.name})'
+
+    def _get_uncached(self, pos: Offset) -> None:
+        layer_pixel = self.layer.get(pos)
+        if self.base is None:
+            return layer_pixel
+
+        base_pixel = self.base.get(pos)
+        return pixel_compute(base_pixel, layer_pixel)
+
+    def get(self, pos: Offset) -> Pixel:
+        y, x = pos
+        line = self._result[y]
+        if y in self.dirty_lines:
+            line = self._get_line_uncached(y)
+            self._result[y] = line
+            self.dirty_lines.remove(y)
+        pixel = line[x]
+        if pos in self.dirty_pixels:
+            pixel = self._get_uncached(pos)
+            self._result[y][x] = pixel
+            self.dirty_pixels.remove(pos)
+
+        return pixel
+
+    def _get_line_uncached(self, y: int) -> list[Pixel]:
+        layer_line = self.layer.get_line(y)
+        if self.base is None:
+            return layer_line
+
+        base_line = self.base.get_line(y)
+        if layer_line is None:
+            return base_line
+
+        w = self.size.width
+        return [pixel_compute(base_line[x], layer_line[x]) for x in range(w)]
+
+    def get_line(self, y: int) -> list[Pixel]:
+        if self.is_dirty(y):
+            self._result[y] = self._get_line_uncached(y)
+            self.clear_dirty(y)
+        return self._result[y]
+
+    def _cache_render_line(self, y: int) -> Strip:
+        data_row = self.get_line(y)
+        line = [pixel.segment for pixel in data_row]
+        self._render_cache[y] = Strip(line).simplify()
+        self.clear_dirty(y)
+
+    def render_line(self, y: int) -> Strip:
+        if self.is_dirty(y):
+            self._cache_render_line(y)
+        return self._render_cache[y]
+
+    def update(self, update: LayerUpdate) -> None:
+        for pos in update.offsets:
+            self.dirty_pixels.append(pos)
+        for line in update.lines:
+            self.dirty_lines.append(line)
 
 
 class Layer:
@@ -44,6 +179,12 @@ class Layer:
         self.visible = visible
         self.opacity = opacity
 
+    def __str__(self):
+        return f'Layer(name={self.name})'
+
+    def __repr__(self):
+        return f'Layer(name={self.name})'
+
     def fill_with(name, size, color: Color):
         data = [
             [Pixel(Pixel.BLANK, bg=color) for j in range(size.width)]
@@ -57,22 +198,27 @@ class Layer:
         pixel = self.data[pos.y][pos.x]
         if pixel is not None:
             pixel = pixel.clone()
-            pixel.alpha = self.opacity
+            pixel.set_opacity(self.opacity)
 
         return pixel
 
+    def get_line(self, y: int) -> list[Pixel | None] | None:
+        if self.data[y] is None:
+            return self.data[y]
+        line = []
+        for x in range(self.region.width):
+            pixel = self.data[y][x]
+            if pixel is not None:
+                pixel = pixel * self.opacity
+            line.append(pixel)
+        return line
+
     def set(self, pos: Offset, pixel: Pixel) -> None:
-        data = self.data
-        data_y = data[pos.y]
-        data_y[pos.x] = pixel
-        data[pos.y] = data_y
-        self.data = data
-        self.post_message(RenderUpdate(self, pos))
+        self.data[pos.y][pos.x] = pixel
+        self.post_message(LayerUpdate(self, offsets=[pos]))
 
     def apply(self, pos: Offset, pixel: Pixel) -> None:
-        curr = self.get(pos)
-        new_pixel = curr.blend(pixel)
-        self.set(pos, new_pixel)
+        self.set(pos, self.data[pos.y][pos.x] + pixel)
 
 
 class Canvas(ScrollView):
@@ -94,63 +240,21 @@ class Canvas(ScrollView):
         size: Size,
         layers: list
     ) -> None:
-        super().__init__(id="Canvas")
+        super().__init__(id="Canvas", name="Canvas")
         self._size = size
         self.mouse_captured = False
+        self.views = dict()
+        self._canvas_view = LayerView(size, base=None, layer=self)
         self._layers = layers
 
-    def get_pixel(self, pos: Offset):
-        """ go through the layers from top to bottom, looking for the top-most
-        pixel and applying the styles of the bottom layers until it reaches the
-        final result """
-        if self._layers is None or len(self._layers) == 0:
-            return None
-        pixel: Pixel = self._layers[-1].get(pos)
-        if pixel is not None and pixel.alpha == 1:
-            return pixel
-        for layer in reversed(self._layers[:-1]):
-            if not layer.visible:
-                continue
-            lower_layer_pixel = layer.get(pos)
-            if lower_layer_pixel is None:
-                continue
-            if pixel is None:
-                pixel = lower_layer_pixel
-            else:  # blend background
-                if pixel.char in [None, Pixel.BLANK]:
-                    pixel.char = lower_layer_pixel.char
-                    pixel.fg = lower_layer_pixel.fg
-                if pixel.bg is None:
-                    pixel.bg = lower_layer_pixel.bg
-                elif lower_layer_pixel.bg is not None:
-                    destination = lower_layer_pixel.bg
-                    pixel.bg = pixel.bg.blend(destination, factor, 1)
+    def __str__(self):
+        return 'Canvas()'
 
-        return pixel
+    def __repr__(self):
+        return 'Canvas()'
 
     def render_line(self, y: int):
-        segments = []
-        style = self.get_component_rich_style()
-        transparent_char = "🬤" if y % 2 == 0 else "🬗"
-        transparent_segment = Segment(transparent_char, style)
-        for x in range(self._size.width):
-            pixel = self.get_pixel(Offset(x, y))
-            if pixel is None:
-                segment = transparent_segment
-            else:
-                if pixel.alpha != 1:
-                    bgcolor = Color.from_rich_color(style.bgcolor)
-                    pixel.bg = bgcolor.blend(pixel.bg, pixel.alpha, 1)
-                    if pixel.is_blank():
-                        pixel.char = transparent_char
-                        color = Color.from_rich_color(style.color)
-                        pixel.fg = color.blend(pixel.bg, pixel.alpha, 1)
-
-                segment = Segment(pixel.char, style=pixel.style)
-
-            segments.append(segment)
-
-        return Strip(segments)
+        return self.views[self._layers[-1]].render_line(y)
 
     def on_mouse_move(self, event):
         pass
@@ -169,22 +273,25 @@ class Canvas(ScrollView):
         # self.post_message(CanvasClick(pixel=pixel))
 
     def on_mouse_down(self, event):
-        print("mouse_down", event)
         pos = Offset(x=event.x, y=event.y)
         self.post_message(CanvasClick(pos=pos))
 
     def on_mouse_up(self, event):
-        print("mouse_up")
+        pass
         # self.release_mouse()
         # self.mouse_captured = False
 
-    def on_render_update(self, message: RenderUpdate) -> None:
-        layer = message.layer
-        pos = message.pos
-        if pos is None:
+    def on_layer_update(self, message: LayerUpdate) -> None:
+        layer_idx = self._layers.index(message.layer)
+        # iterate through a list of pairs (prev, curr) of adjacent layers
+        # the prev of self._layers[0] is None
+        # the first curr is self._layers[layer_idx]
+        for layer in self._layers[layer_idx:]:
+            self.views[layer].update(message)
+        if message.region is None:
             self.refresh()
         else:
-            self.refresh_line(pos.y)
+            self.refresh(message.region)
 
     def get_content_width(self, container, viewport) -> int:
         return self._size.width
@@ -195,5 +302,16 @@ class Canvas(ScrollView):
     def watch__layers(self, old_value, new_value) -> None:
         if new_value is None:
             return
+        base_view = self._canvas_view
         for layer in new_value:
             layer.post_message = self.post_message
+            if layer not in self.views:
+                view = LayerView(self._size, base_view, layer)
+                self.views[layer] = view
+
+    def get_line(self, y: int) -> list[Pixel]:
+        chars = ["🬤", "🬗"]
+        style = self.get_component_rich_style()
+        fg = Color.from_rich_color(style.color)
+        bg = Color.from_rich_color(style.bgcolor)
+        return [Pixel(chars[y % 2], fg, bg)] * self._size.width

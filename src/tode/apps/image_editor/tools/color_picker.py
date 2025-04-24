@@ -18,6 +18,8 @@ from textual.widgets import Static, Input
 
 from utils.color import get_contrasting_color
 
+from ..pixel import Pixel
+
 
 class HSV(NamedTuple):
     h: float | None
@@ -255,19 +257,25 @@ class ColorHexCode(Widget):
 
     def __init__(self, value: Color | None) -> None:
         super().__init__()
+        self.preview_pixel = Static(Pixel.BLANK * 2)
+        self.input = Input(
+            restrict=r"[0-9A-Fa-f]*",
+            max_length=8,
+            select_on_focus=False
+        )
         self.value = value
-        self.preview_pixel = Static("  ")
-        if value is not None:
-            self.preview_pixel.styles.background = value.hex
 
     def hex_to_color(self, hex_value):
+        if hex_value is None or len(hex_value) not in [3, 4, 6, 8]:
+            return None
         return Color.parse(f'#{hex_value}')
 
     def watch_value(self, old_value, new_value):
-        if not self.is_mounted:
+        if new_value is None:
             return
-        input = self.get_child_by_type(Input)
-        input_color = self.hex_to_color(input.value)
+        input = self.input
+        input_value = input.value
+        input_color = self.hex_to_color(input_value)
         if input_color != new_value:
             with input.prevent(Input.Changed):
                 input.value = new_value.hex[1:]
@@ -284,12 +292,7 @@ class ColorHexCode(Widget):
     def compose(self):
         yield self.preview_pixel
         yield Static(" #")
-        yield Input(
-            value=self.value.hex[1:],
-            restrict=r"[0-9A-Fa-f]*",
-            max_length=8,
-            select_on_focus=False
-        )
+        yield self.input
 
 
 class ColorPicker(Widget):
