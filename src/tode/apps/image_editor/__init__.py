@@ -4,12 +4,16 @@ from textual.color import Color
 from textual.geometry import Size
 
 from .image import Image
-from .right_dock import RightDock
-from .toolbox import Toolbox
+
+from .dialogs.panels import RightDock
+from .dialogs.toolbox import Toolbox
+from .dialogs.brush_selector import BrushSelector
+from .dialogs.color_picker import ColorPicker
+from .dialogs.layers import Layers
+
 from .tools import Pencil
-from .tools.color_picker import ColorPicker
 from .tools.color_area import ColorArea
-from .tools.brush_selector import BrushSelector
+
 from .workspace import Workspace
 
 from window_manager.menu_bar import MenuBar, MenuItem
@@ -41,32 +45,45 @@ class ImageEditor(App):
 
     """
 
-    title = "Image Editor"
+    title = "TIMP"
     preferred_state = SizeState.maximized
     memory = dict()
     tools = dict()
+    dialogs = dict()
     active_tool = None
     AUTO_FOCUS = None
 
     def __init__(self):
         super().__init__()
+
         self.memory['active_color'] = "fg"
+
         self.memory['brush'] = " "
+
         self.memory['fg'] = Color.parse("black")
         self.memory['bg'] = Color.parse("white")
+
         self.tools[ColorArea] = ColorArea(
             fg=self.memory['fg'],
             bg=self.memory['bg']
         )
-        self.tools[BrushSelector] = BrushSelector(value=self.memory['brush'])
+        self.dialogs[BrushSelector] = BrushSelector(value=self.memory['brush'])
+        self.dialogs[Toolbox] = Toolbox(
+            self.tools,
+            active_tool=self.active_tool
+        )
+        self.dialogs[ColorPicker] = ColorPicker(
+            value=self.memory[self.memory['active_color']]
+        )
+        self.dialogs[Layers] = Layers()
+
         self.tools[Pencil] = Pencil(self.tools[ColorArea])
-        self.toolbox = Toolbox(self.tools, active_tool=self.active_tool)
         self.workspace = Workspace()
+
         self.right_dock = RightDock(
-            color_picker=ColorPicker(
-                value=self.memory[self.memory['active_color']]
-            ),
-            brush_selector=self.tools[BrushSelector]
+            color_picker=self.dialogs[ColorPicker],
+            brush_selector=self.dialogs[BrushSelector],
+            layers=self.dialogs[Layers]
         )
 
     def on_tool_selected(self, event) -> None:
@@ -75,13 +92,13 @@ class ImageEditor(App):
             self.active_tool.pressed = False
         self.active_tool = event.tool
         self.active_tool.pressed = True
-        self.toolbox.active_tool = event.tool
+        self.dialogs[Toolbox].active_tool = event.tool
 
     def on_brush_selected(self, event):
         event.stop()
         self.memory['brush'] = event.brush
         self.tools[Pencil].brush = event.brush
-        self.toolbox.refresh(recompose=True)
+        self.dialogs[Toolbox].refresh(recompose=True)
 
     def on_color_picked(self, event):
         event.stop()
@@ -92,7 +109,7 @@ class ImageEditor(App):
             color_area.bg = event.color
 
     def compose(self):
-        yield self.toolbox
+        yield self.dialogs[Toolbox]
         yield self.workspace
         yield self.right_dock
         yield MenuBar(

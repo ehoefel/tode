@@ -1,13 +1,12 @@
-from textual.color import Color
 from textual.geometry import Offset
 from textual.reactive import var
 from textual.widget import Widget
 from textual.widgets import Static
 
-from apps.image_editor.canvas import Layer
 from utils.checkbox import Checkbox
 
-from ..pixel import Pixel
+from ..image.canvas import Layer
+from ..image.pixel import Pixel
 from .tool import Tool, ToolOptions
 
 
@@ -17,7 +16,16 @@ class FormLine(Widget):
       layout: grid;
       grid-size: 2;
       grid-rows: 1;
-      grid-columns: 1fr 1;
+      grid-columns: 1fr auto;
+      height: 1;
+      padding: 0 1;
+      Static.label {
+        width: 1fr;
+      }
+      Static.value {
+        text-align: right;
+        width: 100%;
+      }
     }
     """
 
@@ -25,7 +33,8 @@ class FormLine(Widget):
     value: Widget
 
     def compose(self):
-        yield Static(self.label)
+        self.value.add_class("value")
+        yield Static(self.label, classes="label")
         yield self.value
 
 
@@ -35,6 +44,9 @@ class BrushLine(FormLine):
 
 
 class PaintBackgroundOption(FormLine):
+    DEFAULT_CSS = """
+
+    """
 
     checked = var(False)
     label = "background: "
@@ -87,4 +99,3 @@ class Pencil(Tool):
             bg = None
         pixel = Pixel(char=char, fg=fg, bg=bg)
         layer.apply(pos, pixel)
-

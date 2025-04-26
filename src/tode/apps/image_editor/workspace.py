@@ -1,9 +1,6 @@
-from textual.geometry import Size
 from textual.reactive import reactive
 from textual.widget import Widget
-from textual.containers import Container
 
-from .canvas import Canvas
 from .tabs import Tab, TabBar
 from .image import Image
 

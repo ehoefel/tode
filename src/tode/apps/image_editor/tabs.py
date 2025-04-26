@@ -1,7 +1,7 @@
 from typing import Iterable
 
 from textual.widget import Widget
-from textual.reactive import reactive
+from textual.reactive import reactive, var
 from textual.message import Message
 
 
@@ -124,3 +124,39 @@ class TabBar(Widget):
         """
         event.tab_idx = self.tabs.index(event.tab)
 
+
+class TabArea(Widget):
+
+    tabs: var[list[Tab]] = var(None)
+    active_tab_idx: var[int] = var(None)
+
+    def __init__(
+        self,
+        tabs: list[Tab],
+        active_tab_idx: int | None = None
+    ) -> None:
+        super().__init__()
+
+        if active_tab_idx is None:
+            active_tab_idx = 0
+
+        self.tab_bar = TabBar(*tabs, active_tab_idx=active_tab_idx)
+        self.set_reactive(TabArea.tabs, tabs)
+        self.active_tab_idx = active_tab_idx
+
+    def watch_active_tab_idx(self, old_value, new_value) -> None:
+        for idx, tab in enumerate(self.tabs):
+            if idx == new_value:
+                tab.content.styles.display = "block"
+            else:
+                tab.content.styles.display = "none"
+        self.tab_bar.active_tab_idx = new_value
+
+    def compose(self):
+        yield self.tab_bar
+        for tab in self.tabs:
+            yield tab.content
+
+    def on_tab_focus(self, event):
+        event.stop()
+        self.active_tab_idx = event.tab_idx

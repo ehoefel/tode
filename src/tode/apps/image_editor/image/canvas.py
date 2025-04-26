@@ -1,6 +1,5 @@
 # cSpell: disable
 from __future__ import annotations
-from typing import NamedTuple
 
 from textual.color import Color
 from textual.message import Message
@@ -40,13 +39,13 @@ class LayerUpdate(Message):
             max_x = None
             max_y = None
             for offset in self._offsets:
-                if min_x == None or offset.x < min_x:
+                if min_x is None or offset.x < min_x:
                     min_x = offset.x
-                if max_x == None or offset.x > max_x:
+                if max_x is None or offset.x > max_x:
                     max_x = offset.x
-                if min_y == None or offset.y < min_y:
+                if min_y is None or offset.y < min_y:
                     min_y = offset.y
-                if max_y == None or offset.y > max_y:
+                if max_y is None or offset.y > max_y:
                     max_y = offset.y
             return Region.from_corners(min_x, min_y, max_x + 1, max_y + 1)
 
@@ -233,19 +232,17 @@ class Canvas(ScrollView):
       }
     """
 
-    _layers = reactive(None)
+    view: reactive[LayerView] = reactive(None)
 
     def __init__(
         self,
         size: Size,
-        layers: list
+        view: LayerView | None = None
     ) -> None:
         super().__init__(id="Canvas", name="Canvas")
         self._size = size
         self.mouse_captured = False
-        self.views = dict()
-        self._canvas_view = LayerView(size, base=None, layer=self)
-        self._layers = layers
+        self.view = view
 
     def __str__(self):
         return 'Canvas()'
@@ -254,9 +251,7 @@ class Canvas(ScrollView):
         return 'Canvas()'
 
     def render_line(self, y: int):
-        if len(self._layers) == 0:
-            return self._canvas_view.render_line(y)
-        return self.views[self._layers[-1]].render_line(y)
+        return self.view.render_line(y)
 
     def on_mouse_move(self, event):
         if not self.mouse_captured:
@@ -277,33 +272,11 @@ class Canvas(ScrollView):
         self.release_mouse()
         self.mouse_captured = False
 
-    def on_layer_update(self, message: LayerUpdate) -> None:
-        layer_idx = self._layers.index(message.layer)
-        # iterate through a list of pairs (prev, curr) of adjacent layers
-        # the prev of self._layers[0] is None
-        # the first curr is self._layers[layer_idx]
-        for layer in self._layers[layer_idx:]:
-            self.views[layer].update(message)
-        if message.region is None:
-            self.refresh()
-        else:
-            self.refresh(message.region)
-
     def get_content_width(self, container, viewport) -> int:
         return self._size.width
 
     def get_content_height(self, container: Size, viewport: Size, width: int):
         return self._size.height
-
-    def watch__layers(self, old_value, new_value) -> None:
-        if new_value is None:
-            return
-        base_view = self._canvas_view
-        for layer in new_value:
-            layer.post_message = self.post_message
-            if layer not in self.views:
-                view = LayerView(self._size, base_view, layer)
-                self.views[layer] = view
 
     def get_line(self, y: int) -> list[Pixel]:
         chars = ["🬤", "🬗"]

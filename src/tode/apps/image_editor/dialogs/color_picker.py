@@ -18,7 +18,7 @@ from textual.widgets import Static, Input
 
 from utils.color import get_contrasting_color
 
-from ..pixel import Pixel
+from ..image.pixel import Pixel
 
 
 class HSV(NamedTuple):

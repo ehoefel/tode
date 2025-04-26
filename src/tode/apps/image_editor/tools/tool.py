@@ -3,7 +3,7 @@ from textual.message import Message
 from textual.widget import Widget
 
 from .color_area import ColorArea
-from apps.image_editor.canvas import Layer
+from apps.image_editor.image.canvas import Layer
 
 from utils.button import Button
 

@@ -4,6 +4,12 @@ from textual.widget import Widget
 
 
 class Checkbox(Widget):
+
+    DEFAULT_CSS = """
+      Checkbox:hover {
+        background: #0078d7;
+      }
+    """
     #  󰄮 󰡖 󰄲 󰱒  󰄱 󰄵
     #  󰄱  󰄱 󰄱  󰄱 󰄵
 
@@ -20,12 +26,11 @@ class Checkbox(Widget):
         self.checked = checked
 
     def render(self):
-        return "󰄲 " if self.checked else "󰄱 "
+        return " 󰄲 " if self.checked else " 󰄱 "
 
     def on_click(self, event):
         self.parent.post_message(Checkbox.Changed(not self.checked))
         self.post_message(Checkbox.Changed(not self.checked))
 
     def on_checkbox_changed(self, message) -> None:
-        print(self, message)
         self.checked = message.value

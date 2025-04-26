@@ -3,10 +3,11 @@ from textual.geometry import Size
 from textual.reactive import reactive
 from textual.widget import Widget
 
-from .tools.color_area import ColorArea
-from .tools.tool import Empty
-from .tools import tool_list
-from .tabs import Tab, TabBar
+from ..tabs import Tab, TabBar
+
+from ..tools.tool import Empty
+from ..tools import tool_list
+from ..tools.color_area import ColorArea
 
 
 class Toolbox(Widget):
