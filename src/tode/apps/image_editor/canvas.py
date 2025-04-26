@@ -254,32 +254,28 @@ class Canvas(ScrollView):
         return 'Canvas()'
 
     def render_line(self, y: int):
+        if len(self._layers) == 0:
+            return self._canvas_view.render_line(y)
         return self.views[self._layers[-1]].render_line(y)
 
     def on_mouse_move(self, event):
-        pass
-        # if not self.mouse_captured:
-        #     return
-        # if (
-        #     event.x < 0
-        #     or event.y < 0
-        #     or event.x >= len(self.data)
-        #     or event.y >= len(self.data[0])
-        # ):
-        #     return
-        # print("mouse_move", event.x, event.y)
-        # event.stop()
-        # pixel = self.data[event.y][event.x]
-        # self.post_message(CanvasClick(pixel=pixel))
+        if not self.mouse_captured:
+            return
+        pos = Offset(x=event.x, y=event.y)
+        if not self._size.contains_point(pos):
+            return
+        event.stop()
+        self.post_message(CanvasClick(pos))
 
     def on_mouse_down(self, event):
         pos = Offset(x=event.x, y=event.y)
         self.post_message(CanvasClick(pos=pos))
+        self.mouse_captured = True
+        self.capture_mouse()
 
     def on_mouse_up(self, event):
-        pass
-        # self.release_mouse()
-        # self.mouse_captured = False
+        self.release_mouse()
+        self.mouse_captured = False
 
     def on_layer_update(self, message: LayerUpdate) -> None:
         layer_idx = self._layers.index(message.layer)

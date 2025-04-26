@@ -67,7 +67,7 @@ class Image(Widget):
             layer = Layer.fill_with(name, size, background)
         else:
             layer = Layer(name, size, data)
-        self._layers = self._layers = [layer]
+        self._layers = self._layers + [layer]
 
     def new(size: Size, background: Color | None = None):
         name = "Untitled.xcf"
