@@ -16,7 +16,7 @@ from textual.strip import Strip
 from textual.widget import Widget
 from textual.widgets import Static, Input
 
-from utils.color import get_contrasting_color
+from ..utils.color import get_contrasting_color
 
 from ..image.pixel import Pixel
 
@@ -253,6 +253,12 @@ class SVPickArea(Widget):
 
 class ColorHexCode(Widget):
 
+    DEFAULT_CSS = """
+      ColorHexCode {
+        align: right middle;
+      }
+    """
+
     value = reactive(None)
 
     def __init__(self, value: Color | None) -> None:
@@ -300,6 +306,7 @@ class ColorPicker(Widget):
     DEFAULT_CSS = """
      ColorPicker {
        height: auto;
+       margin-top: 1;
      }
 
     """

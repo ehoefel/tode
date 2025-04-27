@@ -3,7 +3,7 @@ from textual.reactive import var
 from textual.widget import Widget
 from textual.widgets import Static
 
-from utils.checkbox import Checkbox
+from ..utils.checkbox import Checkbox
 
 from ..image.canvas import Layer
 from ..image.pixel import Pixel

@@ -1,19 +1,17 @@
 # cSpell:disable
 from typing import Iterable
 
-from rich.color import Color as RichColor
 from rich.console import Console, ConsoleOptions
 from rich.segment import Segment
 from rich.style import Style
 
 from textual.color import Color
-from textual.containers import Horizontal
 from textual.message import Message
 from textual.reactive import reactive, var
 from textual.widgets import Static
 from textual.widget import Widget
 
-from utils.color import get_contrasting_color
+from ..utils.color import get_contrasting_color
 
 
 class ColorSwapped(Message):

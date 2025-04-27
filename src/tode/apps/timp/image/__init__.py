@@ -90,6 +90,7 @@ class Image(Widget):
 
         self._layers[name] = layer
         self.layer_order.append(name)
+        self.active_layer_name = name
 
         layer_index = self.layer_order.index(name)
         if layer_index == 0:
@@ -103,9 +104,9 @@ class Image(Widget):
 
     @property
     def active_layer(self):
-        if self._layers is None or self.active_layer_idx is None:
+        if self._layers is None or self.active_layer_name is None:
             return None
-        return self._layers[self.active_layer_idx]
+        return self._layers[self.active_layer_name]
 
     @property
     def active_view(self):
@@ -121,16 +122,16 @@ class Image(Widget):
         yield self.canvas
 
     def on_layer_update(self, message: LayerUpdate) -> None:
-        layer_idx = self.layer_order.index(message.layer)
+        layer_idx = self.layer_order.index(message.layer.name)
         # iterate through a list of pairs (prev, curr) of adjacent layers
         # the prev of self._layers[0] is None
         # the first curr is self._layers[layer_idx]
-        for layer in self._layers[layer_idx:]:
-            self.views[layer].update(message)
+        for name in self.layer_order[layer_idx:]:
+            self.views[name].update(message)
         if message.region is None:
-            self.refresh()
+            self.canvas.refresh()
         else:
-            self.refresh(message.region)
+            self.canvas.refresh(message.region)
 
     def get_content_width(self, container, viewport) -> int:
         return self.image_size.width
@@ -141,5 +142,6 @@ class Image(Widget):
     def on_canvas_click(self, message: CanvasClick):
         pos = message.pos
         layer = self.active_layer
+        print(pos, layer, self.active_layer_name)
         self.post_message(ImageClick(layer=layer, pos=pos))
         # top_layer = self.active_layer

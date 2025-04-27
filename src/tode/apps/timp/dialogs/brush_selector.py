@@ -11,7 +11,7 @@ from textual.strip import Strip
 from textual.widget import Widget
 from textual.widgets import Input
 
-from utils.chars import Chars
+from ..utils.chars import Chars
 
 
 class BrushSelected(Message):
@@ -196,6 +196,7 @@ class BrushSelector(Widget):
          layout: vertical;
          height: 10;
          padding: 0 1;
+         margin-top: 1;
          Input, Input:hover, Input:focus {
            height: 1;
            width: 100%;

@@ -22,10 +22,10 @@ from window_manager.size_state import SizeState
 from apps.app import App
 
 
-class ImageEditor(App):
+class TIMP(App):
 
     DEFAULT_CSS = """
-    ImageEditor {
+    TIMP {
       layout: vertical;
       width: 1fr;
       height: 1fr;
@@ -129,7 +129,9 @@ class ImageEditor(App):
         background = self.memory['bg']
         image = Image.new(image_size, background)
         self.workspace.new_tab(image)
+        self.dialogs[Layers].image = image
 
     def on_image_click(self, message) -> None:
+        print(message.layer)
         if self.active_tool is not None:
             self.active_tool.apply_to_layer(message.layer, message.pos)

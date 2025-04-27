@@ -8,7 +8,7 @@ from textual.widgets import Static
 from textual.widget import Widget
 
 # from apps.border_editor import BorderEditor
-from apps.image_editor import ImageEditor
+from apps.timp import TIMP
 
 
 class Tode(App):
@@ -22,7 +22,7 @@ class Tode(App):
 
     def on_mount(self):
         self.windows = []
-        self.create_window(ImageEditor())
+        self.create_window(TIMP())
 
     def compose(self):
         yield Static("hi")

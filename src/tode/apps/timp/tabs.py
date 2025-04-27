@@ -19,9 +19,9 @@ class Tab(Widget):
       width: auto;
       height: auto;
       padding: 0 1;
-      background: #212321;
+      background: #202020;
       &.-active {
-        background: #393b39;
+        background: #3B3B3B;
       }
      }
     """
@@ -39,51 +39,6 @@ class Tab(Widget):
         self.post_message(TabFocus(tab=self))
 
 
-class TabBarBottomBorder(Widget):
-
-    DEFAULT_CSS = """
-      TabBarBottomBorder {
-        dock: bottom;
-        height: 1;
-        width: 100%;
-        color: #565855;
-      }
-    """
-
-    gap_start: int = reactive(0)
-    gap_length: int = reactive(0)
-    active_tab_idx: int = reactive(0)
-
-    def __init__(self, tabs, active_tab_idx):
-        super().__init__()
-        self.tabs = tabs
-        self.active_tab_idx = active_tab_idx
-        self.calculate_gap_size()
-
-    def watch_active_tab_idx(self, old_value, new_value) -> None:
-        self.calculate_gap_size()
-
-    def calculate_gap_size(self):
-        if self.active_tab_idx is None or len(self.tabs) == 0:
-            self.gap_start = 0
-            self.gap_length = 0
-        else:
-            active_tab = self.tabs[self.active_tab_idx]
-            self.gap_start = 0
-            for tab_before in self.tabs[:self.active_tab_idx]:
-                self.gap_start += tab_before.outer_size.width
-            self.gap_length = active_tab.outer_size.width
-
-    def on_resize(self):
-        self.calculate_gap_size()
-
-    def render(self):
-        left = "▔" * self.gap_start
-        gap = " " * self.gap_length
-        right = "▔" * (self.size.width - (len(left) + len(gap)))
-        return left + gap + right
-
-
 class TabBar(Widget):
 
     DEFAULT_CSS = """
@@ -91,6 +46,7 @@ class TabBar(Widget):
         dock: top;
         layout: horizontal;
         height: auto;
+        background: #454545;
       }
     """
 
@@ -107,14 +63,10 @@ class TabBar(Widget):
                 tab.add_class("-active")
             else:
                 tab.remove_class("-active")
-        if not self.is_mounted:
-            return
-        self.get_child_by_type(TabBarBottomBorder).active_tab_idx = new_value
 
     def compose(self):
         for tab in self.tabs:
             yield tab
-        yield TabBarBottomBorder(self.tabs, self.active_tab_idx)
 
     def on_tab_focus(self, event):
         """ receive a TabFocus message sent by a tab
@@ -127,15 +79,27 @@ class TabBar(Widget):
 
 class TabArea(Widget):
 
+    DEFAULT_CSS = """
+    TabArea {
+      height: 100%;
+    }
+
+    """
+
     tabs: var[list[Tab]] = var(None)
     active_tab_idx: var[int] = var(None)
 
     def __init__(
         self,
         tabs: list[Tab],
-        active_tab_idx: int | None = None
+        active_tab_idx: int | None = None,
+        *,
+        name: str | None = None,
+        id: str | None = None,
+        classes: str | None = None,
+        disabled: bool = False
     ) -> None:
-        super().__init__()
+        super().__init__(name=name, id=id, classes=classes, disabled=disabled)
 
         if active_tab_idx is None:
             active_tab_idx = 0

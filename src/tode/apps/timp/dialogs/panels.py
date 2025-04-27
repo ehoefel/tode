@@ -16,10 +16,14 @@ class RightDock(Widget):
       height: 100%;
       width: auto;
       padding-top: 1;
-      background: #434343;
+      background: #3B3B3B;
+      layout: grid;
+      grid-size: 1;
+      grid-rows: auto 1fr;
+      grid-gutter: 1;
+      hatch: "▄" #454545;
       TabArea {
-        height: auto;
-        padding-bottom: 1;
+        height: 1fr;
       }
     }
     """
@@ -33,18 +37,22 @@ class RightDock(Widget):
         super().__init__()
         tabs_1 = [
             Tab(name="󰏘", content=color_picker),
-            Tab(name="󱀍", content=brush_selector)
+            Tab(name="󰛖", content=brush_selector)
         ]
-        tabs_2 = [Tab(name=" 󰽘 ", content=layers)]
+        tabs_2 = [
+                Tab(name="󰌨", content=layers),
+                Tab(name="󰕭", content=Widget()),
+                Tab(name="󰕙", content=Widget())
+                ]
         self.tab_area_1 = TabArea(tabs=tabs_1)
-        self.tab_area_2 = TabArea(tabs=tabs_2)
+        self.tab_area_2 = TabArea(tabs=tabs_2, classes="second")
 
     def compose(self):
         yield self.tab_area_1
         yield self.tab_area_2
 
     def get_content_width(self, container, viewport) -> int:
-        return 15
+        return 25
 
     def get_content_height(self, container: Size, viewport: Size, width: int):
         return container.height

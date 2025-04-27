@@ -127,7 +127,6 @@ Tode {
 
 RightDock {
   ColorPicker {
-    height: auto;
     ColorHexCode {
       layout: horizontal;
       height: auto;

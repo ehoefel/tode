@@ -1,7 +1,6 @@
 from typing import Iterable
 from rich.console import Console, ConsoleOptions
 from rich.segment import Segment
-from rich.style import Style as RichStyle
 
 from textual.reactive import reactive
 from textual.widget import Widget
@@ -16,16 +15,21 @@ class Button(Widget):
         "-pressed",
         "-pressed-border-top",
         "-pressed-border-left",
-        "-disabled"
+        "-disabled",
+        "-disabled-border-top",
+        "-disabled-border-left"
     )
 
     DEFAULT_CSS = """
-      $button-color: #CCCCCC;
+      $button-color: #BBBBBB;
       $button-border: #999999;
       $button-bg: #656565;
       $button-pressed-color: white;
-      $button-pressed-border: #320000;
-      $button-pressed-bg: #321515;
+      $button-pressed-border: #121212;
+      $button-pressed-bg: #1E1E1E;
+      $button-disabled-color: #320000;
+      $button-disabled-border: #320000;
+      $button-disabled-bg: #321515;
       Button {
         width: auto;
         height: auto;
@@ -64,8 +68,18 @@ class Button(Widget):
       }
 
       .-disabled {
-        color: $button-pressed-border;
-        background: $button-pressed-bg;
+        color: $button-disabled-color;
+        background: $button-disabled-bg;
+      }
+
+      .-disabled-border-top {
+        color: $button-disabled-border;
+        background: transparent;
+      }
+
+      .-disabled-border-left {
+        color: $button-disabled-border;
+        background: $button-disabled-bg;
       }
 
     """
@@ -111,8 +125,8 @@ class Button(Widget):
             border_left_style = self.get_component_rich_style("-pressed-border-left")
         if self.disabled:
             style = self.get_component_rich_style("-disabled")
-            border_top_style = self.get_component_rich_style("-pressed-border-top")
-            border_left_style = self.get_component_rich_style("-pressed-border-left")
+            border_top_style = self.get_component_rich_style("-disabled-border-top")
+            border_left_style = self.get_component_rich_style("-disabled-border-left")
         segments.append(Segment("▁▁▁", style=border_top_style))
         segments.append(Segment.line())
         segments.append(Segment("▎", style=border_left_style))
