@@ -3,25 +3,79 @@ from typing import Iterable
 from rich.console import Console, ConsoleOptions
 from rich.segment import Segment
 
+from textual.css.query import NoMatches
 from textual.reactive import var, reactive
 from textual.strip import Strip
 from textual.widget import Widget
-from textual.widgets import Static
+from textual.widgets import Static, ListView, ListItem
 
 from ..image import Image
-from ..image.canvas import Layer
+from ..image.layer import Layer
 
 from .footer import Footer, FooterButton
 
 
-
 class Layers(Widget):
 
+    class LayerItem(ListItem):
 
-    class LayerList(Widget):
+        VISIBLE_ICON = ""      #   󰈈      󰛐
+        NOT_VISIBLE_ICON = ""  #   󱀦 󰈉 󱗣  󱀧 󰛑 󱗤
+        LINK_ICON = ""         # 󰌷󰌹󰿨
+        NO_LINK_ICON = ""      # 󰌷󰌹󰿨
 
-        VISIBLE_ICON = ""     #     󰈈      󰛐
-        NOT_VISIBLE_ICON = "" #     󱀦 󰈉 󱗣  󱀧 󰛑 󱗤
+        COMPONENT_CLASSES = ("-active",)
+
+        DEFAULT_CSS = """
+        LayerItem {
+          layout: horizontal;
+          width: 100%;
+          height: 1;
+          padding-left: 1;
+          &.-highlight {
+            color: white !important;
+            background: #1F1F1F !important;
+            text-style: none !important;
+          }
+          & > Static {
+            width: auto;
+            height: 1;
+          }
+
+          .link {
+            padding-left: 1;
+          }
+          .name {
+            padding-left: 4;
+          }
+        }
+
+        """
+
+        active: reactive[bool] = reactive(False)
+        visible: reactive[bool] = reactive(False)
+        linked: reactive[bool] = reactive(False)
+
+        def __init__(
+            self,
+            layer: Layer,
+            id: str | None = None
+        ) -> None:
+            super().__init__(name=layer.name, id=id)
+            self.visibility = Static(Layers.LayerItem.VISIBLE_ICON,
+                                     classes="visibility")
+            self.linked = Static(Layers.LayerItem.LINK_ICON, classes="link")
+            self.text = Static(layer.name, classes="name")
+
+        def watch_active(self, old_value, new_value):
+            self.highlighted = new_value
+
+        def compose(self):
+            yield self.visibility
+            yield self.linked
+            yield self.text
+
+    class LayerList(ListView):
 
         DEFAULT_CSS = """
           LayerList {
@@ -29,35 +83,36 @@ class Layers(Widget):
             height: 1fr;
             width: 1fr;
             background: #303030;
-            margin-left: 1;
-            padding-left: 1;
           }
 
         """
 
-        items: reactive[list[Layer] | None] = reactive(None)
+        _layers: reactive[list[Layer] | None] = reactive(None, recompose=True)
+        layer_order: reactive[list[str] | None] = reactive(None, recompose=True)
+        active_layer_name: var[str | None] = var(None)
 
-        def __init__(self, layers: list[Layer] | None = None) -> None:
+        def __init__(self) -> None:
             super().__init__()
-            self.items = layers
 
-        def render(self):
-            return self
+        def watch_active_layer_name(self, old_value, new_value):
+            if not self.is_mounted:
+                return
+            if old_value is not None:
+                self.get_child_by_id(old_value).active = False
+            if new_value is not None:
+                try:
+                    self.get_child_by_id(new_value).active = True
+                except NoMatches:
+                    pass
 
-        def __rich_console__(
-            self, console: Console, options: ConsoleOptions
-        ) -> Iterable[Segment]:
-            segments = []
-            style = self.get_component_rich_style()
-            for item in self.items:
-                if item.visible:
-                  visibility = self.VISIBLE_ICON
-                else:
-                  visibility = self.INVISIBLE_ICON
-                segments.append(Segment(visibility, style=style))
-                segments.append(Segment(f' {item.name}', style=style))
-                segments.append(Segment.line())
-            return segments[:-1]
+        def compose(self):
+            if self._layers is None or len(self._layers) == 0:
+                return
+            ordered_layers = [self._layers[name] for name in self.layer_order]
+            for layer in ordered_layers:
+                item = Layers.LayerItem(layer, id=layer.name)
+                item.active = layer.name == self.active_layer_name
+                yield item
 
     class ModeSelect(Widget):
 
@@ -113,7 +168,7 @@ class Layers(Widget):
             text_left = "Opacity"
             text_right = "100"
             padding_amount = self.size.width
-            padding_amount -=  len(text_left) + len(text_right)
+            padding_amount -= len(text_left) + len(text_right)
             text_padding = " " * padding_amount
             text = f'{text_left}{text_padding}{text_right}'
             style = self.get_component_rich_style()
@@ -141,7 +196,6 @@ class Layers(Widget):
             yield Static(" ")  # 󰃣 
             yield Static(" ")  # 󰁁  
             yield Static("󰄺 ")
-
 
     class NewLayer(FooterButton):
         symbol = "󰹍"
@@ -179,6 +233,7 @@ class Layers(Widget):
     image: var[Image] = var(None)
     _layers: var[list[Layer]] = var(None)
     layer_order: var[list[int]] = var(None)
+    active_layer_name: var[str] = var(None)
 
     def __init__(self, image: Image | None = None):
         super().__init__()
@@ -202,9 +257,9 @@ class Layers(Widget):
         if new_value is not None:
             self._layers = new_value._layers
             self.layer_order = new_value.layer_order
+            self.active_layer_name = new_value.active_layer_name
 
     def watch__layers(self, old_value, new_value) -> None:
-        print("layers update", old_value, new_value)
         pass
 
     def watch_layer_order(self, old_value, new_value) -> None:
@@ -214,12 +269,14 @@ class Layers(Widget):
         layers = [self._layers[name] for name in new_value]
         self.layer_list.items = layers
 
-        print("layer order update", old_value, new_value)
         pass
 
     def compose(self):
         yield self.mode_select
         yield self.opacity_bar
         yield self.lock
-        yield self.layer_list
+        yield self.layer_list.data_bind(
+                _layers=Layers._layers,
+                layer_order=Layers.layer_order,
+                active_layer_name=Layers.active_layer_name)
         yield self.footer
